@@ -213,22 +213,70 @@ nav.sidebar-nav{flex:1;padding:12px 0;}
 
 /* ══ MOBILE ══ */
 @media(max-width:768px){
-  #sidebar{position:fixed;inset:0 auto 0 0;z-index:150;transform:translateX(-100%);}
-  #sidebar.open{transform:translateX(0);}
+  /* Sidebar slide-in */
+  #sidebar{position:fixed;inset:0 auto 0 0;z-index:150;transform:translateX(-100%);width:260px;}
+  #sidebar.open{transform:translateX(0);box-shadow:4px 0 30px rgba(0,0,0,0.7);}
+  /* Sidebar overlay backdrop */
+  #sidebar-backdrop{display:none;position:fixed;inset:0;z-index:140;background:rgba(0,0,0,0.55);backdrop-filter:blur(2px);}
+  #sidebar-backdrop.show{display:block;}
+
   .mobile-menu-btn{display:flex;}
-  .content{padding:18px 16px;}
-  .main-header{padding:16px 16px 14px;padding-left:60px;}
-  .cards-row{grid-template-columns:1fr 1fr;}
-  .form-grid,.form-grid-3{grid-template-columns:1fr;}
-  .field.full{grid-column:1;}
-  .enq-table td,.enq-table th{padding:9px 10px;font-size:0.75rem;}
-}
-@media(max-width:480px){
-  .cards-row{grid-template-columns:1fr 1fr;}
-  .stat-card{padding:14px;}
-  .stat-card-num{font-size:1.4rem;}
-  .page-title{font-size:0.85rem;}
+  .content{padding:14px 12px;}
+  .main-header{padding:14px 12px 12px;padding-left:58px;gap:8px;}
+  .page-title{font-size:0.88rem;letter-spacing:1px;}
+  .page-subtitle{font-size:0.48rem;}
   .header-actions{display:none;}
+
+  /* Stat cards 2 column */
+  .cards-row{grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+  .stat-card{padding:14px 12px;}
+  .stat-card-num{font-size:1.5rem;}
+  .stat-card-label{font-size:0.44rem;letter-spacing:1px;}
+  .stat-card-icon{font-size:1.1rem;top:12px;right:10px;}
+
+  /* Forms */
+  .form-section{padding:16px 14px;margin-bottom:14px;}
+  .form-section-title{font-size:0.65rem;margin-bottom:14px;}
+  .form-grid,.form-grid-3{grid-template-columns:1fr;gap:12px;}
+  .field.full{grid-column:1;}
+  .field input,.field textarea,.field select{font-size:1rem;padding:12px 13px;}
+  .field label{font-size:0.52rem;}
+
+  /* Enquiries table scroll */
+  .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .enq-table{min-width:580px;}
+  .enq-table td,.enq-table th{padding:10px 10px;font-size:0.72rem;}
+
+  /* Buttons */
+  .save-btn{padding:13px 22px;font-size:0.6rem;width:100%;}
+  .add-btn{padding:11px 18px;font-size:0.52rem;}
+
+  /* Toast */
+  .toast{bottom:16px;right:12px;left:12px;max-width:100%;font-size:0.58rem;}
+
+  /* Theme presets */
+  .theme-presets-grid{grid-template-columns:repeat(2,1fr);gap:10px;}
+  .bg-anim-grid{grid-template-columns:repeat(2,1fr);}
+
+  /* Master overlay */
+  #master-overlay > div{width:96vw !important;padding:24px 18px !important;max-height:88vh !important;}
+}
+
+@media(max-width:480px){
+  .cards-row{grid-template-columns:1fr 1fr;gap:8px;}
+  .stat-card{padding:12px 10px;}
+  .stat-card-num{font-size:1.3rem;}
+  .page-title{font-size:0.8rem;}
+  .mobile-menu-btn{width:36px;height:36px;font-size:1.1rem;top:12px;left:12px;}
+  .main-header{padding-left:54px;}
+  .content{padding:12px 10px;}
+  .form-section{padding:14px 12px;}
+
+  /* Login box on small phones */
+  .login-box{padding:28px 20px;}
+  .login-logo{font-size:1.2rem;}
+  .login-btn{font-size:0.6rem;padding:13px;}
+  .google-btn{font-size:0.54rem;padding:12px;}
 }
 </style>
 </head>
@@ -255,6 +303,8 @@ nav.sidebar-nav{flex:1;padding:12px 0;}
 
 <!-- MOBILE MENU BTN -->
 <button class="mobile-menu-btn" id="mob-menu-btn" onclick="toggleSidebar()">☰</button>
+<!-- SIDEBAR BACKDROP -->
+<div id="sidebar-backdrop" onclick="toggleSidebar()"></div>
 
 <!-- APP -->
 <div id="app" style="display:none;">
@@ -1379,17 +1429,13 @@ window.showPanel = function(name) {
 };
 
 window.toggleSidebar = function() {
-  document.getElementById('sidebar').classList.toggle('open');
+  const sidebar = document.getElementById('sidebar');
+  const backdrop = document.getElementById('sidebar-backdrop');
+  sidebar.classList.toggle('open');
+  if(backdrop) backdrop.classList.toggle('show', sidebar.classList.contains('open'));
 };
 
-// Close sidebar on outside click (mobile)
-document.addEventListener('click', function(e) {
-  const sidebar = document.getElementById('sidebar');
-  const btn = document.getElementById('mob-menu-btn');
-  if(sidebar.classList.contains('open') && !sidebar.contains(e.target) && e.target !== btn) {
-    sidebar.classList.remove('open');
-  }
-});
+// Close sidebar on outside click (mobile) - handled by backdrop div onclick
 
 // Enter key for login
 document.getElementById('login-pass')?.addEventListener('keydown', e => {
