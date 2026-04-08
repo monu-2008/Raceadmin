@@ -796,8 +796,8 @@ nav.sidebar-nav{flex:1;padding:12px 0;}
             <span id="tlb-stat">15+ YRS</span>
           </div>
           <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;">
-            <button class="save-btn" onclick="saveTheme()">💾 SAVE THEME</button>
-            <button class="add-btn" onclick="resetTheme()">↺ RESET DEFAULT</button>
+            <button class="save-btn" onclick="if(isFeatureLocked('theme')){showLockedMessage('theme');}else{saveTheme();}">💾 SAVE THEME</button>
+            <button class="add-btn" onclick="if(isFeatureLocked('theme')){showLockedMessage('theme');}else{resetTheme();}">↺ RESET DEFAULT</button>
           </div>
         </div>
 
@@ -858,7 +858,7 @@ nav.sidebar-nav{flex:1;padding:12px 0;}
             <div class="field"><label>Total Reviews</label><input type="text" id="h-reviews" placeholder="213+"></div>
             <div class="field"><label>Happy Customers</label><input type="text" id="h-customers" placeholder="5000+"></div>
           </div>
-          <button class="save-btn" style="margin-top:16px;" onclick="saveHero()">💾 SAVE HERO SECTION</button>
+          <button class="save-btn" style="margin-top:16px;" onclick="if(isFeatureLocked('hero')){showLockedMessage('hero');}else{saveHero();}">💾 SAVE HERO SECTION</button>
         </div>
       </div>
 
@@ -873,7 +873,7 @@ nav.sidebar-nav{flex:1;padding:12px 0;}
             <div class="field full"><label>Full Address</label><textarea id="ci-address" rows="3" placeholder="Shop address..."></textarea></div>
             <div class="field full"><label>Business Hours</label><textarea id="ci-hours" rows="2" placeholder="Mon – Sat: 10AM – 8PM&#10;Sunday: Closed"></textarea></div>
           </div>
-          <button class="save-btn" style="margin-top:16px;" onclick="saveContact()">💾 SAVE CONTACT INFO</button>
+          <button class="save-btn" style="margin-top:16px;" onclick="if(isFeatureLocked('contact')){showLockedMessage('contact');}else{saveContact();}">💾 SAVE CONTACT INFO</button>
         </div>
       </div>
 
@@ -881,7 +881,7 @@ nav.sidebar-nav{flex:1;padding:12px 0;}
       <div class="panel" id="panel-services">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
           <div style="font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:rgba(0,245,255,0.4);letter-spacing:2px;">MANAGE SERVICE CARDS · DRAG TO REORDER</div>
-          <button class="add-btn" onclick="addService()">＋ ADD SERVICE</button>
+          <button class="add-btn" onclick="if(isFeatureLocked('services')){showLockedMessage('services');}else{addService();}">＋ ADD SERVICE</button>
         </div>
         <div id="services-editor"></div>
       </div>
@@ -890,7 +890,7 @@ nav.sidebar-nav{flex:1;padding:12px 0;}
       <div class="panel" id="panel-products">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
           <div style="font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:rgba(0,245,255,0.4);letter-spacing:2px;">MANAGE PRODUCT CAROUSEL CARDS</div>
-          <button class="add-btn" onclick="addProduct()">＋ ADD PRODUCT</button>
+          <button class="add-btn" onclick="if(isFeatureLocked('products')){showLockedMessage('products');}else{addProduct();}">＋ ADD PRODUCT</button>
         </div>
         <div id="products-editor"></div>
       </div>
@@ -957,10 +957,20 @@ function setDbStatus(connected) {
   if(txt) txt.textContent = connected ? 'FIREBASE CONNECTED' : 'NOT CONNECTED';
 }
 
+// ══ ALLOWED ADMIN EMAILS — sirf inhe access milega ══
+const ALLOWED_ADMINS = [
+  "manmohansharma002008@gmail.com",
+  // Aur emails add karo agar chahiye: "anotheradmin@example.com"
+];
+
+function isAllowedAdmin(user) {
+  return user && ALLOWED_ADMINS.includes(user.email);
+}
+
 // ── AUTH ──
 if(auth) {
-  onAuthStateChanged(auth, user => {
-    if(user) {
+  onAuthStateChanged(auth, async user => {
+    if(user && isAllowedAdmin(user)) {
       document.getElementById('login-screen').classList.add('hidden');
       // Fix: use block on mobile to avoid flex override issues, then CSS handles it
       const appEl = document.getElementById('app');
@@ -982,6 +992,18 @@ if(auth) {
       if(infoEl) infoEl.style.display = 'block';
       if(emailEl) emailEl.textContent = user.displayName || user.email;
       initAdmin();
+    } else if(user && !isAllowedAdmin(user)) {
+      // Logged in hai but authorized nahi — turant logout karo
+      await signOut(auth);
+      document.getElementById('login-screen').classList.remove('hidden');
+      const appEl = document.getElementById('app');
+      appEl.style.display = 'none';
+      const mbn = document.getElementById('mobile-bottom-nav');
+      if(mbn) mbn.style.display = 'none';
+      const infoEl = document.getElementById('admin-user-info');
+      if(infoEl) infoEl.style.display = 'none';
+      const errEl = document.getElementById('login-err');
+      if(errEl) errEl.textContent = '⛔ Access denied. Aap admin nahi hain.';
     } else {
       document.getElementById('login-screen').classList.remove('hidden');
       const appEl = document.getElementById('app');
@@ -999,7 +1021,12 @@ window.doGoogleLogin = async function() {
   errEl.textContent = '';
   try {
     const provider = new GoogleAuthProvider();
-    await signInWithPopup(auth, provider);
+    const result = await signInWithPopup(auth, provider);
+    // Admin check — allowed nahi toh turant logout
+    if (!isAllowedAdmin(result.user)) {
+      await signOut(auth);
+      errEl.textContent = '⛔ Access denied. Yeh Google account authorized nahi hai.';
+    }
   } catch(e) {
     const msgs = {
       'auth/popup-closed-by-user': 'Sign-in popup closed.',
@@ -1017,6 +1044,11 @@ window.doLogin = async function() {
   const errEl = document.getElementById('login-err');
   errEl.textContent = '';
   if(!email || !pass){ errEl.textContent = 'Please enter email and password.'; return; }
+  // Pehle check karo — allowed admin hai ya nahi
+  if(!ALLOWED_ADMINS.includes(email)) {
+    errEl.textContent = '⛔ Access denied. Yeh email authorized nahi hai.';
+    return;
+  }
   try {
     await signInWithEmailAndPassword(auth, email, pass);
   } catch(e) {
@@ -1436,7 +1468,7 @@ function renderServicesEditor() {
       </div>
     </div>`).join('');
   container.innerHTML += `<div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
-    <button class="save-btn" onclick="saveServices()">💾 SAVE ALL SERVICES</button>
+    <button class="save-btn" onclick="if(isFeatureLocked('services')){showLockedMessage('services');}else{saveServices();}">💾 SAVE ALL SERVICES</button>
   </div>`;
 }
 
@@ -1521,7 +1553,7 @@ function renderProductsEditor() {
       </div>
     </div>`).join('');
   container.innerHTML += `<div style="margin-top:16px;">
-    <button class="save-btn" onclick="saveProducts()">💾 SAVE ALL PRODUCTS</button>
+    <button class="save-btn" onclick="if(isFeatureLocked('products')){showLockedMessage('products');}else{saveProducts();}">💾 SAVE ALL PRODUCTS</button>
   </div>`;
 }
 
@@ -1919,39 +1951,7 @@ function showLockedMessage(featureKey) {
   document.body.appendChild(overlay);
 }
 
-// Patch existing save functions to check locks
-(function patchSaveFunctions() {
-  const origSaveTheme = window.saveTheme;
-  window.saveTheme = function() {
-    if(isFeatureLocked('theme')) { showLockedMessage('theme'); return; }
-    origSaveTheme && origSaveTheme.apply(this, arguments);
-  };
-  const origResetTheme = window.resetTheme;
-  window.resetTheme = function() {
-    if(isFeatureLocked('theme')) { showLockedMessage('theme'); return; }
-    origResetTheme && origResetTheme.apply(this, arguments);
-  };
-  const origSaveHero = window.saveHero;
-  window.saveHero = function() {
-    if(isFeatureLocked('hero')) { showLockedMessage('hero'); return; }
-    origSaveHero && origSaveHero.apply(this, arguments);
-  };
-  const origSaveContact = window.saveContact;
-  window.saveContact = function() {
-    if(isFeatureLocked('contact')) { showLockedMessage('contact'); return; }
-    origSaveContact && origSaveContact.apply(this, arguments);
-  };
-  const origSaveServices = window.saveServices;
-  window.saveServices = function() {
-    if(isFeatureLocked('services')) { showLockedMessage('services'); return; }
-    origSaveServices && origSaveServices.apply(this, arguments);
-  };
-  const origSaveProducts = window.saveProducts;
-  window.saveProducts = function() {
-    if(isFeatureLocked('products')) { showLockedMessage('products'); return; }
-    origSaveProducts && origSaveProducts.apply(this, arguments);
-  };
-})();
+// Feature lock checks are now directly on save buttons via onclick handlers
 
 // ── OPEN MASTER OVERLAY ──
 window.triggerMasterAdmin = function() {
@@ -1968,7 +1968,10 @@ window.triggerMasterAdmin = function() {
   document.getElementById('master-pass-input').value = '';
   document.getElementById('master-err1').textContent = '';
   masterStep = 1;
-  setTimeout(() => document.getElementById('master-pass-input').focus(), 100);
+  // Mobile pe focus nahi karo — keyboard turant aa jaata hai
+  if(!window.matchMedia('(max-width:768px)').matches) {
+    setTimeout(() => document.getElementById('master-pass-input').focus(), 100);
+  }
 };
 
 window.closeMasterOverlay = function() {
@@ -2161,6 +2164,7 @@ window.saveMasterCloudinary = function() {
 
     function onTap(e) {
       e.stopPropagation();
+      e.preventDefault(); // Mobile pe default touch behavior rok do
       taps++;
       if (timer) clearTimeout(timer);
 
@@ -2182,7 +2186,9 @@ window.saveMasterCloudinary = function() {
         clearTimeout(timer);
         // Reset logo
         if (img) { img.style.opacity = '0.45'; img.style.textShadow = ''; }
-        triggerMasterAdmin();
+        // Mobile pe thoda delay do taaki last tap settle ho jaye
+        var isMobile = window.matchMedia('(max-width:768px)').matches;
+        setTimeout(triggerMasterAdmin, isMobile ? 300 : 0);
       } else {
         timer = setTimeout(function() {
           taps = 0;
