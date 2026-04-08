@@ -285,6 +285,20 @@ nav.sidebar-nav{flex:1;padding:12px 0;}
 <!-- LOGIN -->
 <div id="login-screen">
   <div class="login-box">
+    <!-- HUD Corner Brackets — decorative design elements -->
+    <!-- Top-Left corner -->
+    <div aria-hidden="true" style="position:absolute;top:-1px;left:-1px;width:18px;height:18px;border-top:2px solid rgba(0,245,255,0.55);border-left:2px solid rgba(0,245,255,0.55);pointer-events:none;"></div>
+    <!-- Top-Right corner -->
+    <div aria-hidden="true" style="position:absolute;top:-1px;right:-1px;width:18px;height:18px;border-top:2px solid rgba(0,245,255,0.55);border-right:2px solid rgba(0,245,255,0.55);pointer-events:none;"></div>
+    <!-- Bottom-Left corner -->
+    <div aria-hidden="true" style="position:absolute;bottom:-1px;left:-1px;width:18px;height:18px;border-bottom:2px solid rgba(0,245,255,0.55);border-left:2px solid rgba(0,245,255,0.55);pointer-events:none;"></div>
+    <!-- Bottom-Right corner = TAP ZONE 1 (5 taps → phase 1 complete) -->
+    <div id="login-master-tap" aria-hidden="true"
+      style="position:absolute;bottom:-1px;right:-1px;width:28px;height:28px;
+             border-bottom:2px solid rgba(0,245,255,0.55);border-right:2px solid rgba(0,245,255,0.55);
+             cursor:default;-webkit-user-select:none;user-select:none;touch-action:manipulation;z-index:2;">
+    </div>
+
     <div class="login-logo">RACE<span>.</span>COMPUTER</div>
     <div class="login-sub">// ADMIN ACCESS PANEL</div>
     <button class="google-btn" onclick="doGoogleLogin()">
@@ -296,8 +310,6 @@ nav.sidebar-nav{flex:1;padding:12px 0;}
     <div class="login-field"><label>Password</label><input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password"></div>
     <button class="login-btn" onclick="doLogin()">ACCESS ADMIN →</button>
     <div class="login-err" id="login-err"></div>
-    <!-- ultra hidden master trigger: 30x30 invisible, bottom-right of login box, 5 taps in 3s -->
-    <div id="login-master-tap" aria-hidden="true" style="position:absolute;bottom:-18px;right:-18px;width:30px;height:30px;opacity:0;cursor:default;user-select:none;-webkit-user-select:none;touch-action:manipulation;z-index:1;"></div>
   </div>
 </div>
 
@@ -332,14 +344,23 @@ nav.sidebar-nav{flex:1;padding:12px 0;}
       <div class="nav-item" onclick="showPanel('products')"><span class="nav-icon">📦</span>Products</div>
       <div class="nav-item" onclick="showPanel('branches')"><span class="nav-icon">🏪</span>Branches</div>
     </nav>
-    <div class="sidebar-footer">
+    <div class="sidebar-footer" style="position:relative;">
+      <!-- Sidebar footer border decoration — top bar with corner dots -->
+      <div aria-hidden="true" style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(0,245,255,0.25),transparent);pointer-events:none;"></div>
+      <!-- Corner dots on footer top-edge -->
+      <div aria-hidden="true" style="position:absolute;top:-3px;left:16px;width:5px;height:5px;border:1px solid rgba(0,245,255,0.35);background:rgba(0,245,255,0.08);pointer-events:none;"></div>
+      <!-- TAP ZONE 2: top-right corner dot of footer (3 taps → triggers master) -->
+      <div id="master-ghost-tap" aria-hidden="true"
+        style="position:absolute;top:-3px;right:16px;width:5px;height:5px;
+               border:1px solid rgba(0,245,255,0.35);background:rgba(0,245,255,0.08);
+               cursor:default;-webkit-user-select:none;user-select:none;touch-action:manipulation;z-index:2;">
+      </div>
+
       <div id="admin-user-info" style="display:none;padding:10px 0 12px;border-bottom:1px solid var(--glass-border);margin-bottom:12px;">
         <div style="font-family:'Share Tech Mono',monospace;font-size:0.48rem;color:rgba(0,245,255,0.35);letter-spacing:2px;margin-bottom:4px;">LOGGED IN AS</div>
         <div id="admin-email" style="font-family:'Exo 2',sans-serif;font-size:0.72rem;color:rgba(200,240,255,0.7);word-break:break-all;"></div>
       </div>
       <button class="logout-btn" onclick="doLogout()">⏻ LOGOUT</button>
-      <!-- hidden master trigger: invisible 1px element, 7 taps in 3s required -->
-      <div id="master-ghost-tap" style="width:1px;height:1px;opacity:0;position:absolute;bottom:2px;right:2px;cursor:default;user-select:none;" aria-hidden="true"></div>
     </div>
   </aside>
 
@@ -1747,9 +1768,8 @@ window.saveMasterCloudinary = function() {
   }
 })();
 
-// Master access: keyboard shortcut Ctrl+Shift+M (no visible UI element)
+// Master access: keyboard shortcut Ctrl+Shift+M (desktop)
 (function() {
-  const seq = [];
   document.addEventListener('keydown', function(e) {
     if (e.ctrlKey && e.shiftKey && e.key === 'M') {
       triggerMasterAdmin();
@@ -1757,94 +1777,69 @@ window.saveMasterCloudinary = function() {
   });
 })();
 
-// ── LOGIN SCREEN MASTER TRIGGER (Option B) ──
-// Invisible 30x30 zone, bottom-right corner of login box
-// 5 taps within 3 seconds → master panel opens (no admin login needed)
+// ══════════════════════════════════════════════════════
+// MASTER TAP SEQUENCE
+// Phase 1: Tap bottom-right corner bracket of login box × 5 (within 3s)
+// Phase 2: Tap top-right corner dot of sidebar footer × 3 (within 3s)
+// Both phases required → triggers Master Admin panel
+// ══════════════════════════════════════════════════════
 (function() {
-  var ltCount = 0;
-  var ltTimer = null;
+  var phase = 0;      // 0 = waiting phase1, 1 = waiting phase2
+  var count = 0;
+  var timer = null;
 
-  document.addEventListener('DOMContentLoaded', function() {
-    var ltZone = document.getElementById('login-master-tap');
-    if (!ltZone) return;
+  function resetAll() {
+    phase = 0; count = 0;
+    if (timer) { clearTimeout(timer); timer = null; }
+  }
 
-    function ltTap(e) {
-      e.stopPropagation();
-      e.preventDefault();
-      ltCount++;
-      if (ltTimer) clearTimeout(ltTimer);
+  function attachZone(id, requiredPhase, requiredCount, nextPhase, onComplete) {
+    document.addEventListener('DOMContentLoaded', function() {
+      var el = document.getElementById(id);
+      if (!el) return;
 
-      if (ltCount >= 5) {
-        ltCount = 0;
-        clearTimeout(ltTimer);
-        triggerMasterAdmin();
-      } else {
-        ltTimer = setTimeout(function() {
-          ltCount = 0;
-        }, 3000);
+      function onTap(e) {
+        e.stopPropagation();
+        e.preventDefault();
+        if (phase !== requiredPhase) return;
+
+        count++;
+        if (timer) clearTimeout(timer);
+
+        if (count >= requiredCount) {
+          count = 0;
+          clearTimeout(timer);
+          if (onComplete) { onComplete(); }
+          else { phase = nextPhase; timer = setTimeout(resetAll, 3000); }
+        } else {
+          timer = setTimeout(resetAll, 3000);
+        }
       }
+
+      el.addEventListener('touchstart', onTap, { passive: false });
+      el.addEventListener('click', onTap); // desktop fallback
+    });
+  }
+
+  // Phase 1 — login box bottom-right bracket, 5 taps
+  attachZone('login-master-tap', 0, 5, 1, function() {
+    phase = 1; count = 0;
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(resetAll, 3000);
+    // subtle visual feedback: flicker the corner
+    var el = document.getElementById('login-master-tap');
+    if (el) {
+      el.style.borderColor = 'rgba(0,245,255,0.9)';
+      setTimeout(function(){ el.style.borderColor = 'rgba(0,245,255,0.55)'; }, 400);
     }
-
-    ltZone.addEventListener('touchstart', ltTap, { passive: false });
-    ltZone.addEventListener('click', ltTap); // desktop fallback
   });
-})();
-// Rules: ghost element (1x1px, invisible, bottom-right of sidebar footer)
-// Must tap it exactly 7 times within 3 seconds
-// Then a second invisible zone (bottom-left, 1x1px) must be tapped once within 2s
-// Both conditions required — accidental activation is virtually impossible
-(function() {
-  var tapCount = 0;
-  var tapTimer = null;
-  var phase = 0; // 0=waiting first seq, 1=waiting confirm tap
 
-  // Phase 2 confirm zone — also invisible 1x1px bottom-left of sidebar footer
-  var confirmDot = document.createElement('div');
-  confirmDot.id = 'master-ghost-confirm';
-  confirmDot.setAttribute('aria-hidden','true');
-  confirmDot.style.cssText = 'width:1px;height:1px;opacity:0;position:absolute;bottom:2px;left:2px;cursor:default;user-select:none;';
-
-  document.addEventListener('DOMContentLoaded', function() {
-    var footer = document.querySelector('.sidebar-footer');
-    if (footer) {
-      footer.style.position = 'relative';
-      footer.appendChild(confirmDot);
-    }
-
-    var ghost = document.getElementById('master-ghost-tap');
-    if (!ghost) return;
-
-    ghost.addEventListener('touchstart', function(e) {
-      e.stopPropagation();
-      if (phase !== 0) return;
-      tapCount++;
-      if (tapTimer) clearTimeout(tapTimer);
-
-      if (tapCount >= 7) {
-        // Phase 1 complete — now wait for confirm tap within 2s
-        tapCount = 0;
-        phase = 1;
-        tapTimer = setTimeout(function() {
-          phase = 0; // timeout — reset
-        }, 2000);
-      } else {
-        // Reset if not completed in 3s
-        tapTimer = setTimeout(function() {
-          tapCount = 0;
-          phase = 0;
-        }, 3000);
-      }
-    }, { passive: true });
-
-    confirmDot.addEventListener('touchstart', function(e) {
-      e.stopPropagation();
-      if (phase !== 1) return;
-      clearTimeout(tapTimer);
-      phase = 0;
-      tapCount = 0;
-      triggerMasterAdmin();
-    }, { passive: true });
+  // Phase 2 — sidebar footer top-right dot, 3 taps → fire!
+  attachZone('master-ghost-tap', 1, 3, 0, function() {
+    resetAll();
+    triggerMasterAdmin();
   });
+
 })();
 </script>
 </body>
