@@ -1,0 +1,2759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta http-equiv="X-Content-Type-Options" content="nosniff">
+<meta http-equiv="X-Frame-Options" content="DENY">
+<meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, private">
+<meta http-equiv="Pragma" content="no-cache">
+<title>RACE COMPUTER — Admin Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cyan:#0061ff;--blue:#0040cc;--purple:#7c3aed;
+  --dark:#f0f4ff;--darker:#eaedfc;
+  --glass:rgba(0,97,255,0.04);--glass-border:rgba(0,97,255,0.13);
+  --green:#00a854;--red:#e53935;--orange:#f57c00;
+  --sidebar:240px;
+  --race-hue: 220deg;
+  /* Admin panel light surface colors */
+  --admin-surface: rgba(255,255,255,0.97);
+  --admin-surface2: rgba(240,244,255,0.95);
+  --admin-border: rgba(0,97,255,0.1);
+  --admin-text: #1a2340;
+  --admin-text-dim: rgba(60,80,140,0.5);
+}
+
+/* ══ RACE COLOUR SHIFT — background bar like the website ══ */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg,
+    hsl(var(--race-hue), 100%, 55%),
+    hsl(calc(var(--race-hue) + 60deg), 100%, 65%),
+    hsl(calc(var(--race-hue) + 130deg), 100%, 58%),
+    hsl(var(--race-hue), 100%, 55%)
+  );
+  background-size: 300% 100%;
+  animation: raceBarSlide 2.5s linear infinite;
+  z-index: 99999;
+  pointer-events: none;
+}
+@keyframes raceBarSlide {
+  0%   { background-position: 0% 0%; }
+  100% { background-position: 300% 0%; }
+}
+
+/* Animated bg canvas */
+#admin-bg-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.12;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+
+/* ── Aqerionx pulse animation ── */
+@keyframes aqPulse {
+  0%,100% { opacity:0.45; }
+  50%      { opacity:0.9; }
+}
+
+/* ── Master overlay open animation ── */
+@keyframes masterSlideIn {
+  from { opacity:0; transform:scale(0.88) translateY(30px); }
+  to   { opacity:1; transform:scale(1)    translateY(0); }
+}
+.master-panel-anim {
+  animation: masterSlideIn 0.45s cubic-bezier(0.16,1,0.3,1) forwards;
+}
+
+/* ── Aqerionx logo tap ripple ── */
+@keyframes aqRipple {
+  0%   { transform:scale(0.8); opacity:0.6; }
+  100% { transform:scale(1.4); opacity:0; }
+}
+html,body{height:100%;background:var(--darker);color:var(--admin-text);font-family:'Exo 2',sans-serif;overflow-x:hidden;}
+
+/* ══ LOGIN SCREEN ══ */
+#login-screen{position:fixed;inset:0;z-index:9999;background:rgba(234,237,252,0.92);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;}
+#login-screen.hidden{display:none;}
+.login-box{background:rgba(255,255,255,0.97);border:1px solid var(--glass-border);padding:40px;width:min(90vw,360px);backdrop-filter:blur(20px);position:relative;overflow:visible;box-shadow:0 8px 48px rgba(0,97,255,0.1);}
+.login-box::before{content:'';position:absolute;top:0;left:20%;right:20%;height:2px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);}
+.login-logo{
+  font-family:'Orbitron',monospace;font-size:1.5rem;font-weight:900;
+  letter-spacing:3px;text-align:center;margin-bottom:6px;
+  background:linear-gradient(135deg,var(--cyan),var(--blue),var(--purple),var(--cyan));
+  background-size:300% 100%;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+  animation:raceBarSlide 3s linear infinite;
+  white-space:nowrap;
+}
+.login-logo span{-webkit-text-fill-color:rgba(255,255,255,0.9);}
+.login-sub{font-family:'Share Tech Mono',monospace;font-size:0.55rem;color:rgba(0,97,255,0.4);letter-spacing:4px;text-align:center;margin-bottom:28px;}
+.login-field{margin-bottom:14px;}
+.login-field label{font-family:'Share Tech Mono',monospace;font-size:0.56rem;color:rgba(0,97,255,0.6);letter-spacing:2px;display:block;margin-bottom:7px;}
+.login-field input{width:100%;background:rgba(0,97,255,0.03);border:1px solid var(--glass-border);color:var(--admin-text);padding:11px 14px;font-family:'Exo 2',sans-serif;font-size:0.9rem;outline:none;transition:border-color 0.3s;}
+.login-field input:focus{border-color:rgba(0,97,255,0.45);}
+.login-btn{width:100%;padding:12px;background:linear-gradient(135deg,var(--cyan),var(--blue));color:#000;font-family:'Orbitron',monospace;font-size:0.65rem;font-weight:700;letter-spacing:3px;border:none;cursor:pointer;margin-top:8px;clip-path:polygon(7px 0,100% 0,calc(100% - 7px) 100%,0 100%);transition:all 0.3s;}
+.login-btn:hover{box-shadow:0 0 30px rgba(0,245,255,0.4);}
+.login-err{color:var(--red);font-family:'Share Tech Mono',monospace;font-size:0.55rem;margin-top:10px;text-align:center;letter-spacing:1px;min-height:16px;}
+.login-divider{display:flex;align-items:center;gap:12px;margin:14px 0 10px;}
+.login-divider::before,.login-divider::after{content:'';flex:1;height:1px;background:var(--glass-border);}
+.login-divider span{font-family:'Share Tech Mono',monospace;font-size:0.5rem;color:rgba(0,97,255,0.25);letter-spacing:2px;}
+.google-btn{width:100%;padding:11px;background:rgba(0,97,255,0.03);border:1px solid rgba(0,97,255,0.15);color:var(--admin-text);font-family:'Share Tech Mono',monospace;font-size:0.58rem;letter-spacing:2px;cursor:pointer;transition:all 0.3s;display:flex;align-items:center;justify-content:center;gap:10px;}
+.google-btn:hover{background:rgba(0,97,255,0.07);border-color:rgba(0,97,255,0.3);}
+.google-btn svg{width:16px;height:16px;flex-shrink:0;}
+
+/* ══ LAYOUT ══ */
+/* layout covered below */
+
+/* ── Sidebar ── */
+/* sidebar & main defined below */
+.sidebar-logo{padding:22px 20px 18px;border-bottom:1px solid var(--glass-border);}
+.sidebar-logo-text{
+  font-family:'Orbitron',monospace;font-size:0.88rem;font-weight:900;letter-spacing:2px;
+  background:linear-gradient(135deg,var(--cyan),var(--blue),var(--purple),var(--cyan));
+  background-size:300% 100%;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  animation:raceBarSlide 3s linear infinite;
+  white-space:nowrap;
+}
+.sidebar-logo-text span{-webkit-text-fill-color:rgba(255,255,255,0.85);}
+.sidebar-tag{font-family:'Share Tech Mono',monospace;font-size:0.48rem;color:rgba(0,97,255,0.35);letter-spacing:3px;margin-top:4px;}
+.sidebar-status{display:flex;align-items:center;gap:6px;margin-top:8px;font-family:'Share Tech Mono',monospace;font-size:0.48rem;letter-spacing:1px;}
+.status-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s infinite;}
+.status-dot.red{background:var(--red);box-shadow:0 0 8px var(--red);}
+@keyframes pulse{0%,100%{opacity:0.4}50%{opacity:1}}
+nav.sidebar-nav{flex:1;padding:12px 0;}
+.nav-section{font-family:'Share Tech Mono',monospace;font-size:0.45rem;color:rgba(0,97,255,0.35);letter-spacing:4px;padding:14px 20px 6px;text-transform:uppercase;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;transition:all 0.2s;border-left:2px solid transparent;font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:rgba(40,60,120,0.55);letter-spacing:1.5px;text-transform:uppercase;position:relative;}
+.nav-item:hover{color:var(--cyan);background:rgba(0,97,255,0.04);}
+.nav-item.active{color:var(--cyan);background:rgba(0,97,255,0.06);border-left-color:var(--cyan);}
+.nav-icon{font-size:1rem;flex-shrink:0;}
+.nav-badge{background:var(--red);color:#fff;font-size:0.42rem;padding:2px 6px;border-radius:10px;font-family:'Share Tech Mono',monospace;letter-spacing:0;animation:pulse 1.5s infinite;}
+.sidebar-footer{padding:16px 20px;border-top:1px solid var(--glass-border);}
+.logout-btn{width:100%;padding:9px;border:1px solid rgba(229,57,53,0.25);background:rgba(229,57,53,0.04);color:var(--red);font-family:'Share Tech Mono',monospace;font-size:0.55rem;letter-spacing:2px;cursor:pointer;transition:all 0.3s;}
+.logout-btn:hover{background:rgba(229,57,53,0.1);border-color:var(--red);}
+.img-preview{width:100%;height:120px;border:1px solid var(--glass-border);
+  background:rgba(0,97,255,0.02);display:flex;align-items:center;justify-content:center;
+  margin-bottom:8px;overflow:hidden;position:relative;}
+.img-preview img{width:100%;height:100%;object-fit:cover;}
+.img-preview .img-placeholder{font-size:2rem;opacity:0.35;}
+.upload-btn{width:100%;padding:8px;background:rgba(0,97,255,0.05);
+  border:1px dashed rgba(0,97,255,0.3);color:var(--cyan);
+  font-family:'Share Tech Mono',monospace;font-size:0.55rem;letter-spacing:2px;
+  cursor:pointer;transition:all 0.3s;display:flex;align-items:center;justify-content:center;gap:8px;}
+.upload-btn:hover{background:rgba(0,97,255,0.1);border-color:var(--cyan);}
+.upload-btn.uploading{opacity:0.6;pointer-events:none;}
+.upload-progress{font-family:'Share Tech Mono',monospace;font-size:0.5rem;
+  color:rgba(0,97,255,0.5);letter-spacing:1px;margin-top:4px;text-align:center;min-height:12px;}
+.mobile-menu-btn{display:none;position:fixed;top:14px;left:14px;z-index:200;background:rgba(255,255,255,0.95);border:1px solid var(--glass-border);color:var(--cyan);width:40px;height:40px;align-items:center;justify-content:center;cursor:pointer;font-size:1.2rem;box-shadow:0 2px 12px rgba(0,97,255,0.1);}
+
+/* ── Main ── */
+#main{flex:1;overflow-y:auto;display:flex;flex-direction:column;position:relative;z-index:1;background:var(--darker);}
+
+/* ══ LAYOUT ══ */
+#app{display:flex;height:100vh;overflow:hidden;position:relative;z-index:1;}
+
+/* ── Sidebar ── */
+#sidebar{width:var(--sidebar);background:rgba(255,255,255,0.98);border-right:1px solid var(--glass-border);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;transition:transform 0.3s;position:relative;z-index:2;box-shadow:2px 0 20px rgba(0,97,255,0.06);}
+.main-header{padding:20px 28px 16px;border-bottom:1px solid var(--glass-border);background:rgba(255,255,255,0.95);backdrop-filter:blur(16px);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.page-title{font-family:'Orbitron',monospace;font-size:1rem;font-weight:700;color:var(--admin-text);letter-spacing:2px;}
+.page-subtitle{font-family:'Share Tech Mono',monospace;font-size:0.52rem;color:rgba(0,97,255,0.5);letter-spacing:2px;margin-top:4px;}
+.header-actions{display:flex;gap:10px;align-items:center;}
+.view-site-btn{padding:8px 18px;border:1px solid var(--cyan);color:var(--cyan);background:rgba(0,97,255,0.04);font-family:'Share Tech Mono',monospace;font-size:0.55rem;letter-spacing:2px;cursor:pointer;text-decoration:none;transition:all 0.3s;display:inline-flex;align-items:center;gap:6px;}
+.view-site-btn:hover{background:rgba(0,97,255,0.1);}
+.content{padding:24px 28px;flex:1;background:var(--darker);}
+
+/* ══ PANELS ══ */
+.panel{display:none;}
+.panel.active{display:block;}
+
+/* ══ CARDS ══ */
+.cards-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px;}
+.stat-card{background:rgba(255,255,255,0.97);border:1px solid var(--glass-border);padding:20px;position:relative;overflow:hidden;transition:border-color 0.3s;border-radius:4px;box-shadow:0 2px 16px rgba(0,97,255,0.06);}
+.stat-card:hover{border-color:rgba(0,97,255,0.3);}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--cyan),var(--blue));}
+.stat-card-num{font-family:'Orbitron',monospace;font-size:1.8rem;font-weight:900;color:var(--cyan);line-height:1;}
+.stat-card-label{font-family:'Share Tech Mono',monospace;font-size:0.5rem;color:rgba(40,60,120,0.4);letter-spacing:2px;margin-top:6px;text-transform:uppercase;}
+.stat-card-icon{position:absolute;top:16px;right:16px;font-size:1.4rem;opacity:0.35;}
+
+/* ══ FORM ELEMENTS ══ */
+.form-section{background:rgba(255,255,255,0.97);border:1px solid var(--glass-border);padding:24px;margin-bottom:20px;border-radius:4px;box-shadow:0 2px 16px rgba(0,97,255,0.05);}
+.form-section-title{font-family:'Orbitron',monospace;font-size:0.72rem;color:var(--cyan);letter-spacing:2px;margin-bottom:18px;display:flex;align-items:center;gap:8px;}
+.form-section-title::before{content:'';width:12px;height:1px;background:var(--cyan);}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+.field{display:flex;flex-direction:column;gap:7px;}
+.field.full{grid-column:1/-1;}
+.field label{font-family:'Share Tech Mono',monospace;font-size:0.55rem;color:rgba(0,97,255,0.55);letter-spacing:2px;}
+.field input,.field textarea,.field select{background:rgba(0,97,255,0.02);border:1px solid var(--glass-border);color:var(--admin-text);padding:10px 13px;font-family:'Exo 2',sans-serif;font-size:0.88rem;outline:none;transition:border-color 0.3s;width:100%;}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:rgba(0,97,255,0.4);}
+.field textarea{resize:vertical;min-height:80px;}
+.field input[type="color"]{height:42px;padding:4px 8px;cursor:pointer;}
+.field select option{background:#fff;color:var(--admin-text);}
+.save-btn{padding:11px 28px;background:linear-gradient(135deg,var(--cyan),var(--blue));color:#000;font-family:'Orbitron',monospace;font-size:0.62rem;font-weight:700;letter-spacing:2px;border:none;cursor:pointer;clip-path:polygon(7px 0,100% 0,calc(100% - 7px) 100%,0 100%);transition:all 0.3s;}
+.save-btn:hover{box-shadow:0 0 25px rgba(0,245,255,0.4);}
+.save-btn:disabled{opacity:0.5;cursor:not-allowed;}
+.del-btn{padding:8px 14px;background:rgba(255,68,85,0.08);border:1px solid rgba(255,68,85,0.25);color:var(--red);font-family:'Share Tech Mono',monospace;font-size:0.52rem;letter-spacing:1px;cursor:pointer;transition:all 0.3s;}
+.del-btn:hover{background:rgba(255,68,85,0.18);border-color:var(--red);}
+.add-btn{padding:9px 20px;border:1px solid rgba(0,245,255,0.3);color:var(--cyan);background:rgba(0,245,255,0.04);font-family:'Share Tech Mono',monospace;font-size:0.55rem;letter-spacing:2px;cursor:pointer;transition:all 0.3s;display:inline-flex;align-items:center;gap:7px;}
+.add-btn:hover{background:rgba(0,245,255,0.1);border-color:var(--cyan);}
+
+/* ══ THEME PREVIEW ══ */
+.theme-preview{width:100%;height:60px;border:1px solid var(--glass-border);border-radius:2px;margin-top:8px;background:var(--darker);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-size:0.65rem;letter-spacing:2px;transition:all 0.3s;}
+
+/* ══ PRESET THEMES GRID ══ */
+.theme-presets-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:4px;}
+.theme-preset-card{border:2px solid transparent;padding:14px 12px;cursor:pointer;transition:all 0.25s;position:relative;overflow:hidden;background:rgba(0,0,0,0.3);}
+.theme-preset-card:hover{transform:translateY(-3px);box-shadow:0 8px 28px rgba(0,0,0,0.5);}
+.theme-preset-card.selected{box-shadow:0 0 0 2px #fff;}
+.theme-preset-card.selected::after{content:'✓ ACTIVE';position:absolute;top:6px;right:6px;font-family:'Share Tech Mono',monospace;font-size:0.38rem;letter-spacing:2px;padding:2px 6px;background:rgba(0,0,0,0.6);color:#fff;}
+.tpc-swatch{display:flex;gap:4px;margin-bottom:10px;}
+.tpc-dot{width:18px;height:18px;border-radius:50%;}
+.tpc-name{font-family:'Orbitron',monospace;font-size:0.58rem;letter-spacing:1px;font-weight:700;margin-bottom:4px;}
+.tpc-desc{font-family:'Share Tech Mono',monospace;font-size:0.42rem;letter-spacing:1px;opacity:0.55;}
+.tpc-bars{display:flex;flex-direction:column;gap:3px;margin-top:8px;}
+.tpc-bar{height:3px;border-radius:1px;opacity:0.6;}
+
+/* ══ LIVE PREVIEW BAR ══ */
+.theme-live-preview-bar{margin-top:18px;padding:14px 20px;border:1px solid;display:flex;align-items:center;justify-content:space-between;font-family:'Orbitron',monospace;font-size:0.65rem;letter-spacing:2px;transition:all 0.3s;}
+
+/* ══ BG ANIM GRID ══ */
+.bg-anim-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;}
+.bg-anim-card{border:2px solid rgba(0,245,255,0.15);padding:0;cursor:pointer;transition:all 0.25s;overflow:hidden;position:relative;}
+.bg-anim-card:hover{border-color:rgba(0,245,255,0.5);transform:translateY(-2px);}
+.bg-anim-card.selected{border-color:#fff;box-shadow:0 0 20px rgba(0,245,255,0.3);}
+.bg-anim-card.selected::after{content:'✓';position:absolute;top:6px;right:8px;color:#fff;font-size:0.8rem;font-weight:900;}
+.bg-anim-preview{width:100%;height:80px;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;}
+.bg-anim-label{font-family:'Orbitron',monospace;font-size:0.5rem;letter-spacing:2px;color:rgba(200,240,255,0.7);padding:8px 10px;background:rgba(0,0,0,0.5);text-align:center;}
+
+/* Anim previews */
+.anim-particles{background:#010508;}
+.anim-grid-bg{background:#010508;background-image:linear-gradient(rgba(0,245,255,0.08) 1px,transparent 1px),linear-gradient(90deg,rgba(0,245,255,0.08) 1px,transparent 1px);background-size:18px 18px;}
+.anim-waves{background:linear-gradient(180deg,#010a1a,#010508);}
+.anim-matrix{background:#000;font-family:'Share Tech Mono',monospace;font-size:7px;color:#00ff41;overflow:hidden;}
+.anim-nebula{background:radial-gradient(ellipse at 30% 40%,rgba(123,47,255,0.3),transparent 60%),radial-gradient(ellipse at 70% 60%,rgba(0,128,255,0.2),transparent 55%),#010508;}
+.anim-hexagon{background:#010508;}
+.anim-aurora{background:linear-gradient(135deg,#010508,#001020);}
+.anim-starfield{background:#000;}
+.anim-circuit{background:#010508;}
+.anim-none{background:#010508;display:flex;align-items:center;justify-content:center;}
+
+/* ══ MODE CARDS ══ */
+.mode-card{cursor:pointer;border:2px solid rgba(0,245,255,0.15);padding:14px;transition:all 0.25s;width:160px;}
+.mode-card:hover{border-color:rgba(0,245,255,0.5);}
+.mode-card.selected{border-color:var(--cyan);box-shadow:0 0 20px rgba(0,245,255,0.2);}
+.mode-card-screen{width:100%;height:70px;border-radius:3px;margin-bottom:10px;padding:10px;display:flex;flex-direction:column;justify-content:center;}
+.dark-screen{background:#010810;}
+.light-screen{background:#f0f4ff;}
+.mode-card-label{font-family:'Orbitron',monospace;font-size:0.55rem;letter-spacing:2px;margin-bottom:4px;}
+.mode-card-desc{font-family:'Share Tech Mono',monospace;font-size:0.42rem;color:rgba(200,240,255,0.4);letter-spacing:1px;}
+
+/* ══ SERVICES EDITOR ══ */
+.service-editor-item{background:rgba(255,255,255,0.97);border:1px solid var(--glass-border);padding:18px;margin-bottom:12px;position:relative;border-radius:4px;box-shadow:0 1px 8px rgba(0,97,255,0.04);}
+.service-editor-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--cyan);}
+.service-item-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.service-item-title{font-family:'Orbitron',monospace;font-size:0.65rem;color:var(--cyan);letter-spacing:1px;}
+
+/* ══ ENQUIRIES TABLE ══ */
+.table-wrap{overflow-x:auto;}
+.enq-table{width:100%;border-collapse:collapse;}
+.enq-table th{font-family:'Share Tech Mono',monospace;font-size:0.52rem;color:rgba(0,97,255,0.5);letter-spacing:2px;padding:10px 14px;text-align:left;border-bottom:1px solid var(--glass-border);white-space:nowrap;}
+.enq-table td{padding:12px 14px;font-size:0.82rem;color:rgba(20,40,100,0.75);border-bottom:1px solid rgba(0,97,255,0.05);vertical-align:top;}
+.enq-table tr:hover td{background:rgba(0,97,255,0.02);}
+.status-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;font-family:'Share Tech Mono',monospace;font-size:0.48rem;letter-spacing:1px;border-radius:2px;}
+.status-badge.new{background:rgba(0,245,255,0.1);border:1px solid rgba(0,245,255,0.3);color:var(--cyan);}
+.status-badge.done{background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.3);color:var(--green);}
+.status-badge.pending{background:rgba(255,136,0,0.1);border:1px solid rgba(255,136,0,0.3);color:var(--orange);}
+.enq-actions{display:flex;gap:6px;}
+.enq-btn{padding:4px 10px;font-family:'Share Tech Mono',monospace;font-size:0.45rem;letter-spacing:1px;cursor:pointer;border:1px solid;transition:all 0.2s;}
+.enq-btn.done-btn{color:var(--green);border-color:rgba(0,255,136,0.3);background:rgba(0,255,136,0.05);}
+.enq-btn.done-btn:hover{background:rgba(0,255,136,0.15);}
+.enq-btn.del-enq{color:var(--red);border-color:rgba(255,68,85,0.3);background:rgba(255,68,85,0.05);}
+.enq-btn.del-enq:hover{background:rgba(255,68,85,0.15);}
+.no-data{text-align:center;padding:40px;font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:rgba(0,97,255,0.25);letter-spacing:3px;}
+.enq-filter{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.filter-btn{padding:6px 14px;border:1px solid var(--glass-border);background:transparent;color:rgba(40,60,140,0.45);font-family:'Share Tech Mono',monospace;font-size:0.5rem;letter-spacing:1px;cursor:pointer;transition:all 0.2s;}
+.filter-btn.active{border-color:var(--cyan);color:var(--cyan);background:rgba(0,97,255,0.05);}
+
+/* ══ GALLERY EDITOR ══ */
+.gal-editor-card{background:rgba(255,255,255,0.97);border:1px solid var(--glass-border);border-radius:4px;overflow:hidden;position:relative;box-shadow:0 2px 12px rgba(0,97,255,0.06);}
+.gal-editor-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--cyan);}
+.gal-card-img{width:100%;height:140px;object-fit:cover;display:block;}
+.gal-card-img-placeholder{width:100%;height:140px;background:rgba(0,97,255,0.04);display:flex;align-items:center;justify-content:center;font-size:2rem;color:rgba(0,97,255,0.2);}
+.gal-card-body{padding:12px 14px;}
+.gal-card-label{font-family:'Orbitron',monospace;font-size:0.6rem;color:var(--cyan);letter-spacing:1.5px;margin-bottom:4px;}
+.gal-card-sub{font-family:'Share Tech Mono',monospace;font-size:0.48rem;color:rgba(40,60,140,0.4);letter-spacing:1px;margin-bottom:10px;}
+.gal-card-badge-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px;}
+.gal-card-badge{background:rgba(0,97,255,0.06);border:1px solid rgba(0,97,255,0.18);padding:2px 8px;font-family:'Share Tech Mono',monospace;font-size:0.44rem;color:var(--cyan);letter-spacing:1px;}
+.gal-card-actions{display:flex;gap:6px;border-top:1px solid var(--glass-border);padding:10px 14px;background:rgba(0,97,255,0.02);}
+
+
+.toast{position:fixed;bottom:24px;right:24px;z-index:9999;background:rgba(255,255,255,0.97);border:1px solid var(--cyan);box-shadow:0 8px 32px rgba(0,97,255,0.15);padding:14px 20px;font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--cyan);letter-spacing:1px;transform:translateY(80px);opacity:0;transition:all 0.4s;max-width:300px;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast.error{border-color:var(--red);color:var(--red);}
+.toast.success{border-color:var(--green);color:var(--green);}
+
+/* ══ MOBILE ══ */
+@media(max-width:768px){
+  /* ── FIX: Force app visible on mobile ── */
+  #app{display:flex !important;flex-direction:column;height:100dvh;height:100vh;}
+
+  /* ── Sidebar slides in from left (hamburger still works) ── */
+  #sidebar{position:fixed;inset:0 auto 0 0;z-index:300;transform:translateX(-100%);width:280px;transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);background:rgba(255,255,255,0.99);}
+  #sidebar.open{transform:translateX(0);box-shadow:8px 0 40px rgba(0,0,0,0.8);}
+  #sidebar-backdrop{display:none;position:fixed;inset:0;z-index:290;background:rgba(0,0,0,0.65);backdrop-filter:blur(3px);}
+  #sidebar-backdrop.show{display:block;}
+
+  /* ── Main layout: column, content scrolls, bottom nav fixed ── */
+  #main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0;}
+
+  /* ── Mobile top header ── */
+  .mobile-menu-btn{display:flex;}
+  .main-header{padding:14px 16px 12px 58px;gap:8px;border-bottom:1px solid var(--glass-border);flex-shrink:0;}
+  .page-title{font-size:1rem;letter-spacing:1.5px;}
+  .page-subtitle{font-size:0.48rem;}
+  .header-actions{display:none;}
+
+  /* ── Scrollable content area ── */
+  .content{
+    flex:1;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    padding:16px 14px 100px; /* bottom padding for nav bar */
+  }
+
+  /* ── Stat cards: 2 col ── */
+  .cards-row{grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+  .stat-card{padding:14px 10px;}
+  .stat-card-num{font-size:1.6rem;}
+  .stat-card-label{font-size:0.44rem;letter-spacing:1px;}
+  .stat-card-icon{font-size:1.2rem;top:12px;right:10px;}
+
+  /* ── Forms ── */
+  .form-section{padding:16px 14px;margin-bottom:14px;}
+  .form-section-title{font-size:0.68rem;margin-bottom:14px;}
+  .form-grid,.form-grid-3{grid-template-columns:1fr;gap:12px;}
+  .field.full{grid-column:1;}
+  .field input,.field textarea,.field select{font-size:16px;padding:13px 14px;}
+  .field label{font-size:0.54rem;}
+
+  /* ── Table ── */
+  .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .enq-table{min-width:600px;}
+  .enq-table td,.enq-table th{padding:11px 10px;font-size:0.74rem;}
+
+  /* ── Buttons ── */
+  .save-btn{padding:14px 22px;font-size:0.62rem;width:100%;}
+  .add-btn{padding:12px 18px;font-size:0.54rem;}
+
+  /* ── Toast: above bottom nav ── */
+  .toast{bottom:80px;right:12px;left:12px;max-width:100%;font-size:0.58rem;}
+
+  /* ── Theme/bg grids ── */
+  .theme-presets-grid{grid-template-columns:repeat(2,1fr);gap:10px;}
+  .bg-anim-grid{grid-template-columns:repeat(2,1fr);}
+
+  /* ── Master overlay ── */
+  #master-overlay > div{width:96vw !important;padding:24px 18px !important;max-height:88vh !important;}
+
+  /* ═══════════════════════════════════════
+     MOBILE BOTTOM NAVIGATION BAR
+  ═══════════════════════════════════════ */
+  #mobile-bottom-nav{
+    display:flex !important;
+    position:fixed;
+    bottom:0;left:0;right:0;
+    z-index:200;
+    height:64px;
+    background:rgba(255,255,255,0.98);
+    border-top:1px solid rgba(0,97,255,0.12);
+    backdrop-filter:blur(20px);
+    -webkit-backdrop-filter:blur(20px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+    box-shadow:0 -4px 20px rgba(0,97,255,0.08);
+  }
+  #mobile-bottom-nav .mbn-item{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:3px;
+    cursor:pointer;
+    position:relative;
+    transition:all 0.2s;
+    -webkit-tap-highlight-color:transparent;
+    touch-action:manipulation;
+  }
+  #mobile-bottom-nav .mbn-item .mbn-icon{
+    font-size:1.3rem;
+    transition:transform 0.2s;
+  }
+  #mobile-bottom-nav .mbn-item .mbn-label{
+    font-family:'Share Tech Mono',monospace;
+    font-size:0.38rem;
+    letter-spacing:0.5px;
+    color:rgba(40,60,140,0.35);
+    transition:color 0.2s;
+    text-transform:uppercase;
+  }
+  #mobile-bottom-nav .mbn-item::before{
+    content:'';
+    position:absolute;
+    top:0;left:50%;
+    transform:translateX(-50%);
+    width:0;height:2px;
+    background:var(--cyan);
+    transition:width 0.25s;
+  }
+  #mobile-bottom-nav .mbn-item.active::before{width:36px;}
+  #mobile-bottom-nav .mbn-item.active .mbn-label{color:var(--cyan);}
+  #mobile-bottom-nav .mbn-item.active .mbn-icon{transform:translateY(-2px);}
+  #mobile-bottom-nav .mbn-item:active .mbn-icon{transform:scale(0.85);}
+
+  /* More menu dot indicator */
+  #mobile-bottom-nav .mbn-item .mbn-badge{
+    position:absolute;
+    top:8px;right:calc(50% - 18px);
+    background:var(--red);
+    width:8px;height:8px;
+    border-radius:50%;
+    display:none;
+    animation:pulse 1.5s infinite;
+  }
+  #mobile-bottom-nav .mbn-item .mbn-badge.show{display:block;}
+
+  /* ── More drawer (slides up) ── */
+  #mobile-more-drawer{
+    display:none;
+    position:fixed;
+    bottom:64px;left:0;right:0;
+    z-index:199;
+    background:rgba(255,255,255,0.99);
+    border-top:1px solid rgba(0,97,255,0.12);
+    box-shadow:0 -8px 32px rgba(0,97,255,0.1);
+    padding:16px 12px 8px;
+    transform:translateY(100%);
+    transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  }
+  #mobile-more-drawer.open{
+    display:block;
+    transform:translateY(0);
+  }
+  #mobile-more-drawer .mmd-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:8px;
+  }
+  #mobile-more-drawer .mmd-item{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:6px;
+    padding:14px 8px;
+    border:1px solid rgba(0,97,255,0.1);
+    background:rgba(0,97,255,0.02);
+    cursor:pointer;
+    border-radius:2px;
+    transition:all 0.2s;
+    -webkit-tap-highlight-color:transparent;
+  }
+  #mobile-more-drawer .mmd-item:active{background:rgba(0,97,255,0.07);}
+  #mobile-more-drawer .mmd-item .mmd-icon{font-size:1.5rem;}
+  #mobile-more-drawer .mmd-item .mmd-label{
+    font-family:'Share Tech Mono',monospace;
+    font-size:0.42rem;
+    color:rgba(40,60,140,0.55);
+    letter-spacing:0.5px;
+    text-transform:uppercase;
+    text-align:center;
+  }
+  #mobile-more-drawer-backdrop{
+    display:none;
+    position:fixed;
+    inset:0;
+    z-index:198;
+  }
+  #mobile-more-drawer-backdrop.show{display:block;}
+}
+
+@media(max-width:480px){
+  .cards-row{grid-template-columns:1fr 1fr;gap:8px;}
+  .stat-card{padding:14px 10px;}
+  .stat-card-num{font-size:1.4rem;}
+  .page-title{font-size:0.9rem;}
+  .mobile-menu-btn{width:38px;height:38px;font-size:1.1rem;top:13px;left:13px;}
+  .main-header{padding-left:56px;}
+  .content{padding:12px 12px 100px;}
+  .form-section{padding:14px 12px;}
+
+  /* Login box on small phones */
+  .login-box{padding:28px 20px;}
+  .login-logo{font-size:1.2rem;}
+  .login-btn{font-size:0.6rem;padding:13px;}
+  .google-btn{font-size:0.54rem;padding:12px;}
+}
+</style>
+</head>
+<body>
+<canvas id="admin-bg-canvas"></canvas>
+<div id="login-screen">
+  <div class="login-box">
+    <!-- HUD Corner Brackets — decorative design elements -->
+    <!-- Top-Left corner -->
+    <div aria-hidden="true" style="position:absolute;top:-1px;left:-1px;width:18px;height:18px;border-top:2px solid rgba(0,245,255,0.55);border-left:2px solid rgba(0,245,255,0.55);pointer-events:none;"></div>
+    <!-- Top-Right corner -->
+    <div aria-hidden="true" style="position:absolute;top:-1px;right:-1px;width:18px;height:18px;border-top:2px solid rgba(0,245,255,0.55);border-right:2px solid rgba(0,245,255,0.55);pointer-events:none;"></div>
+    <!-- Bottom-Left corner -->
+    <div aria-hidden="true" style="position:absolute;bottom:-1px;left:-1px;width:18px;height:18px;border-bottom:2px solid rgba(0,245,255,0.55);border-left:2px solid rgba(0,245,255,0.55);pointer-events:none;"></div>
+    <!-- Bottom-Right corner bracket (decorative) -->
+    <div aria-hidden="true"
+      style="position:absolute;bottom:-1px;right:-1px;width:18px;height:18px;
+             border-bottom:2px solid rgba(0,245,255,0.55);border-right:2px solid rgba(0,245,255,0.55);
+             pointer-events:none;">
+    </div>
+
+    <div class="login-logo">RACE<span> </span>COMPUTER</div>
+    <div class="login-sub">// ADMIN ACCESS PANEL</div>
+    <button class="google-btn" onclick="doGoogleLogin()">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+      SIGN IN WITH GOOGLE
+    </button>
+    <div class="login-divider"><span>OR</span></div>
+    <div class="login-field"><label>Email</label><input type="email" id="login-email" placeholder="admin@racecomputer.in" autocomplete="username"></div>
+    <div class="login-field"><label>Password</label><input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password"></div>
+    <button class="login-btn" onclick="doLogin()">ACCESS ADMIN →</button>
+    <div class="login-err" id="login-err"></div>
+
+    <!-- Aqerionx Logo — 7 tap = Master Admin -->
+    <div id="aqerionx-tag"
+      style="margin-top:20px;padding-top:14px;border-top:1px solid rgba(123,47,255,0.12);
+             text-align:center;cursor:default;-webkit-user-select:none;user-select:none;
+             touch-action:manipulation;">
+      <div id="aqerionx-logo-wrap" style="display:inline-block;position:relative;">
+        <div id="aqerionx-img"
+          style="font-family:'Orbitron',monospace;font-size:1.4rem;font-weight:900;
+                 background:linear-gradient(135deg,#7b2fff,#00f5ff);
+                 -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+                 background-clip:text;letter-spacing:4px;
+                 opacity:0.45;transition:opacity 0.3s,filter 0.3s;
+                 filter:brightness(0.8) saturate(1.2);
+                 padding:8px 4px;display:inline-block;">
+          AQERIONX
+        </div>
+        <!-- Tap ripple overlay -->
+        <div id="aqerionx-ripple"
+          style="position:absolute;inset:0;border-radius:50%;
+                 background:radial-gradient(circle,rgba(123,47,255,0.3),transparent);
+                 opacity:0;transition:opacity 0.2s;pointer-events:none;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MOBILE MENU BTN -->
+<button class="mobile-menu-btn" id="mob-menu-btn" onclick="toggleSidebar()">☰</button>
+<!-- SIDEBAR BACKDROP -->
+<div id="sidebar-backdrop" onclick="toggleSidebar()"></div>
+
+<!-- MOBILE BOTTOM NAVIGATION BAR -->
+<nav id="mobile-bottom-nav" style="display:none;">
+  <div class="mbn-item active" id="mbn-dashboard" onclick="mobileNavTo('dashboard',this)">
+    <div class="mbn-icon">📊</div>
+    <div class="mbn-label">Dashboard</div>
+  </div>
+  <div class="mbn-item" id="mbn-enquiries" onclick="mobileNavTo('enquiries',this)">
+    <div class="mbn-badge" id="mbn-enq-badge"></div>
+    <div class="mbn-icon">📩</div>
+    <div class="mbn-label">Enquiries</div>
+  </div>
+  <div class="mbn-item" id="mbn-appearance" onclick="mobileNavTo('appearance',this)">
+    <div class="mbn-icon">🎨</div>
+    <div class="mbn-label">Theme</div>
+  </div>
+  <div class="mbn-item" id="mbn-more" onclick="toggleMobileMore()">
+    <div class="mbn-icon">⋯</div>
+    <div class="mbn-label">More</div>
+  </div>
+</nav>
+
+<!-- MOBILE MORE DRAWER -->
+<div id="mobile-more-drawer-backdrop" onclick="closeMobileMore()"></div>
+<div id="mobile-more-drawer">
+  <div class="mmd-grid">
+    <div class="mmd-item" onclick="mobileNavTo('hero',null);closeMobileMore()">
+      <div class="mmd-icon">🏠</div>
+      <div class="mmd-label">Hero</div>
+    </div>
+    <div class="mmd-item" onclick="mobileNavTo('contact-info',null);closeMobileMore()">
+      <div class="mmd-icon">📞</div>
+      <div class="mmd-label">Contact</div>
+    </div>
+    <div class="mmd-item" onclick="mobileNavTo('services',null);closeMobileMore()">
+      <div class="mmd-icon">⚙️</div>
+      <div class="mmd-label">Services</div>
+    </div>
+    <div class="mmd-item" onclick="mobileNavTo('products',null);closeMobileMore()">
+      <div class="mmd-icon">📦</div>
+      <div class="mmd-label">Products</div>
+    </div>
+    <div class="mmd-item" onclick="mobileNavTo('gallery',null);closeMobileMore()">
+      <div class="mmd-icon">🖼️</div>
+      <div class="mmd-label">Gallery</div>
+    </div>
+    <div class="mmd-item" onclick="mobileNavTo('branches',null);closeMobileMore()">
+      <div class="mmd-icon">🏪</div>
+      <div class="mmd-label">Branches</div>
+    </div>
+    <div class="mmd-item" onclick="doLogout();closeMobileMore()">
+      <div class="mmd-icon">⏻</div>
+      <div class="mmd-label" style="color:var(--red);">Logout</div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none;">
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-text">RACE<span> </span>COMPUTER</div>
+      <div class="sidebar-tag">ADMIN PANEL v1.0</div>
+      <div class="sidebar-status">
+        <div class="status-dot" id="db-dot" title="Firebase Status"></div>
+        <span id="db-status" style="font-family:'Share Tech Mono',monospace;font-size:0.45rem;color:rgba(0,245,255,0.3);letter-spacing:1px;display:none;"></span>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">OVERVIEW</div>
+      <div class="nav-item active" onclick="showPanel('dashboard')"><span class="nav-icon">📊</span>Dashboard</div>
+      <div class="nav-item" onclick="showPanel('enquiries')"><span class="nav-icon">📩</span>Enquiries <span class="nav-badge" id="new-badge" style="display:none">0</span></div>
+      <div class="nav-section">WEBSITE</div>
+      <div class="nav-item" onclick="showPanel('appearance')"><span class="nav-icon">🎨</span>Theme & Effects</div>
+      <div class="nav-item" onclick="showPanel('hero')"><span class="nav-icon">🏠</span>Hero Section</div>
+      <div class="nav-item" onclick="showPanel('contact-info')"><span class="nav-icon">📞</span>Contact Info</div>
+      <div class="nav-section">CONTENT</div>
+      <div class="nav-item" onclick="showPanel('services')"><span class="nav-icon">⚙️</span>Services</div>
+      <div class="nav-item" onclick="showPanel('products')"><span class="nav-icon">📦</span>Products</div>
+      <div class="nav-item" onclick="showPanel('gallery')"><span class="nav-icon">🖼️</span>Gallery / Photos</div>
+      <div class="nav-item" onclick="showPanel('branches')"><span class="nav-icon">🏪</span>Branches</div>
+    </nav>
+    <div class="sidebar-footer" style="position:relative;">
+      <!-- Sidebar footer border decoration — top bar with corner dots -->
+      <div aria-hidden="true" style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(0,97,255,0.2),transparent);pointer-events:none;"></div>
+      <!-- Corner dots on footer top-edge -->
+      <div aria-hidden="true" style="position:absolute;top:-3px;left:16px;width:5px;height:5px;border:1px solid rgba(0,97,255,0.25);background:rgba(0,97,255,0.06);pointer-events:none;"></div>
+      <!-- TAP ZONE 2: top-right corner dot of footer (3 taps → triggers master) -->
+      <div id="master-ghost-tap" aria-hidden="true"
+        style="position:absolute;top:-3px;right:16px;width:5px;height:5px;
+               border:1px solid rgba(0,97,255,0.25);background:rgba(0,97,255,0.06);
+               cursor:default;-webkit-user-select:none;user-select:none;touch-action:manipulation;z-index:2;">
+      </div>
+
+      <div id="admin-user-info" style="display:none;padding:10px 0 12px;border-bottom:1px solid var(--glass-border);margin-bottom:12px;">
+        <div style="font-family:'Share Tech Mono',monospace;font-size:0.48rem;color:rgba(0,97,255,0.4);letter-spacing:2px;margin-bottom:4px;">LOGGED IN AS</div>
+        <div id="admin-email" style="font-family:'Exo 2',sans-serif;font-size:0.72rem;color:rgba(20,40,100,0.7);word-break:break-all;"></div>
+      </div>
+      <button class="logout-btn" onclick="doLogout()">⏻ LOGOUT</button>
+    </div>
+  </aside>
+
+  <!-- ══ MASTER ADMIN OVERLAY ══ -->
+  <div id="master-overlay" style="display:none;position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,0.92);backdrop-filter:blur(16px);align-items:center;justify-content:center;">
+    <!-- STEP 1: Password -->
+    <div id="master-step1" class="master-panel-anim" style="background:rgba(0,10,25,0.98);border:1px solid rgba(123,47,255,0.4);padding:40px;width:min(90vw,380px);position:relative;">
+      <div style="position:absolute;top:0;left:20%;right:20%;height:2px;background:linear-gradient(90deg,transparent,#7b2fff,transparent);"></div>
+      <div style="text-align:center;margin-bottom:18px;">
+        <div style="font-family:'Orbitron',monospace;font-size:1.6rem;font-weight:900;
+                     background:linear-gradient(135deg,#7b2fff,#00f5ff);
+                     -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+                     background-clip:text;letter-spacing:4px;
+                     filter:brightness(0.9) saturate(1.3);animation:aqPulse 2s ease-in-out infinite;
+                     padding:10px 4px;display:inline-block;">AQERIONX</div>
+      </div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:0.38rem;color:rgba(123,47,255,0.35);letter-spacing:3px;text-align:center;margin-bottom:4px;">AQERIONX SYSTEMS</div>
+      <div style="font-family:'Orbitron',monospace;font-size:1rem;font-weight:900;color:#7b2fff;letter-spacing:3px;text-align:center;margin-bottom:4px;">MASTER ACCESS</div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:0.45rem;color:rgba(123,47,255,0.4);letter-spacing:4px;text-align:center;margin-bottom:28px;">// RESTRICTED ZONE</div>
+      <div style="margin-bottom:14px;">
+        <label style="font-family:'Share Tech Mono',monospace;font-size:0.52rem;color:rgba(123,47,255,0.6);letter-spacing:2px;display:block;margin-bottom:7px;">MASTER PASSWORD</label>
+        <input type="password" id="master-pass-input" placeholder="••••••••" autocomplete="off"
+          style="width:100%;background:rgba(123,47,255,0.04);border:1px solid rgba(123,47,255,0.25);color:#e0f7fa;padding:11px 14px;font-family:'Exo 2',sans-serif;font-size:0.9rem;outline:none;"
+          onkeydown="if(event.key==='Enter') verifyMasterPass()">
+      </div>
+      <button onclick="verifyMasterPass()" style="width:100%;padding:12px;background:linear-gradient(135deg,#7b2fff,#5500cc);color:#fff;font-family:'Orbitron',monospace;font-size:0.6rem;font-weight:700;letter-spacing:3px;border:none;cursor:pointer;">VERIFY →</button>
+      <div id="master-err1" style="color:#ff4455;font-family:'Share Tech Mono',monospace;font-size:0.52rem;margin-top:10px;text-align:center;letter-spacing:1px;min-height:16px;"></div>
+      <button onclick="closeMasterOverlay()" style="display:block;margin:14px auto 0;background:none;border:none;color:rgba(255,255,255,0.2);font-family:'Share Tech Mono',monospace;font-size:0.5rem;cursor:pointer;letter-spacing:2px;">✕ CANCEL</button>
+    </div>
+
+    <!-- STEP 2: Google Auth -->
+    <div id="master-step2" style="display:none;background:rgba(0,10,25,0.98);border:1px solid rgba(123,47,255,0.4);padding:40px;width:min(90vw,380px);position:relative;">
+      <div style="position:absolute;top:0;left:20%;right:20%;height:2px;background:linear-gradient(90deg,transparent,#7b2fff,transparent);"></div>
+      <div style="font-family:'Orbitron',monospace;font-size:1rem;font-weight:900;color:#7b2fff;letter-spacing:3px;text-align:center;margin-bottom:4px;">⬡ IDENTITY VERIFY</div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:0.45rem;color:rgba(123,47,255,0.4);letter-spacing:4px;text-align:center;margin-bottom:24px;">// CONFIRM WITH GOOGLE</div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:0.55rem;color:rgba(200,240,255,0.4);text-align:center;margin-bottom:20px;letter-spacing:1px;">Sign in with your authorized<br>Google account to continue.</div>
+      <button onclick="masterGoogleVerify()" style="width:100%;padding:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);color:#e0f7fa;font-family:'Share Tech Mono',monospace;font-size:0.58rem;letter-spacing:2px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;">
+        <svg viewBox="0 0 24 24" width="16" height="16"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+        SIGN IN WITH GOOGLE
+      </button>
+      <div id="master-err2" style="color:#ff4455;font-family:'Share Tech Mono',monospace;font-size:0.52rem;margin-top:10px;text-align:center;letter-spacing:1px;min-height:16px;"></div>
+      <button onclick="closeMasterOverlay()" style="display:block;margin:14px auto 0;background:none;border:none;color:rgba(255,255,255,0.2);font-family:'Share Tech Mono',monospace;font-size:0.5rem;cursor:pointer;letter-spacing:2px;">✕ CANCEL</button>
+    </div>
+
+    <!-- STEP 3: Welcome + Master Control Panel -->
+    <div id="master-step3" style="display:none;background:rgba(0,10,25,0.98);border:1px solid rgba(123,47,255,0.5);padding:36px;width:min(96vw,640px);position:relative;max-height:90vh;overflow-y:auto;">
+      <div style="position:absolute;top:0;left:10%;right:10%;height:2px;background:linear-gradient(90deg,transparent,#7b2fff,#00f5ff,#7b2fff,transparent);"></div>
+      <div style="text-align:center;margin-bottom:28px;">
+        <div style="margin-bottom:12px;">
+          <div style="font-family:'Orbitron',monospace;font-size:1.4rem;font-weight:900;
+                     background:linear-gradient(135deg,#7b2fff,#00f5ff);
+                     -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+                     background-clip:text;letter-spacing:4px;padding:8px 4px;
+                     display:inline-block;filter:brightness(1) saturate(1.4);
+                     animation:aqPulse 2s ease-in-out infinite;">AQERIONX</div>
+        </div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:0.38rem;color:rgba(123,47,255,0.4);letter-spacing:3px;margin-bottom:6px;">AQERIONX SYSTEMS</div>
+        <div style="font-family:'Orbitron',monospace;font-size:1.2rem;font-weight:900;
+                    background:linear-gradient(135deg,#7b2fff,#00f5ff);
+                    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+                    background-clip:text;letter-spacing:3px;">WELCOME, MONU</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:0.45rem;color:rgba(123,47,255,0.5);letter-spacing:4px;margin-top:6px;">// MASTER CONTROL CENTER</div>
+      </div>
+
+      <!-- Firebase Config -->
+      <div style="background:rgba(123,47,255,0.05);border:1px solid rgba(123,47,255,0.2);padding:20px;margin-bottom:16px;">
+        <div style="font-family:'Orbitron',monospace;font-size:0.65rem;color:#7b2fff;letter-spacing:2px;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+          <span style="width:12px;height:1px;background:#7b2fff;display:inline-block;"></span> FIREBASE CONFIG
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <label style="font-family:'Share Tech Mono',monospace;font-size:0.5rem;color:rgba(123,47,255,0.6);letter-spacing:2px;">API KEY</label>
+            <input id="mc-fb-apikey" type="text" placeholder="AIzaSy..." style="background:rgba(123,47,255,0.04);border:1px solid rgba(123,47,255,0.2);color:#e0f7fa;padding:9px 12px;font-family:'Share Tech Mono',monospace;font-size:0.6rem;outline:none;width:100%;">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <label style="font-family:'Share Tech Mono',monospace;font-size:0.5rem;color:rgba(123,47,255,0.6);letter-spacing:2px;">AUTH DOMAIN</label>
+            <input id="mc-fb-authdomain" type="text" placeholder="project.firebaseapp.com" style="background:rgba(123,47,255,0.04);border:1px solid rgba(123,47,255,0.2);color:#e0f7fa;padding:9px 12px;font-family:'Share Tech Mono',monospace;font-size:0.6rem;outline:none;width:100%;">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <label style="font-family:'Share Tech Mono',monospace;font-size:0.5rem;color:rgba(123,47,255,0.6);letter-spacing:2px;">DATABASE URL</label>
+            <input id="mc-fb-dburl" type="text" placeholder="https://project-rtdb..." style="background:rgba(123,47,255,0.04);border:1px solid rgba(123,47,255,0.2);color:#e0f7fa;padding:9px 12px;font-family:'Share Tech Mono',monospace;font-size:0.6rem;outline:none;width:100%;">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <label style="font-family:'Share Tech Mono',monospace;font-size:0.5rem;color:rgba(123,47,255,0.6);letter-spacing:2px;">PROJECT ID</label>
+            <input id="mc-fb-projectid" type="text" placeholder="my-project" style="background:rgba(123,47,255,0.04);border:1px solid rgba(123,47,255,0.2);color:#e0f7fa;padding:9px 12px;font-family:'Share Tech Mono',monospace;font-size:0.6rem;outline:none;width:100%;">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <label style="font-family:'Share Tech Mono',monospace;font-size:0.5rem;color:rgba(123,47,255,0.6);letter-spacing:2px;">APP ID</label>
+            <input id="mc-fb-appid" type="text" placeholder="1:xxx:web:xxx" style="background:rgba(123,47,255,0.04);border:1px solid rgba(123,47,255,0.2);color:#e0f7fa;padding:9px 12px;font-family:'Share Tech Mono',monospace;font-size:0.6rem;outline:none;width:100%;">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <label style="font-family:'Share Tech Mono',monospace;font-size:0.5rem;color:rgba(123,47,255,0.6);letter-spacing:2px;">MESSAGING SENDER ID</label>
+            <input id="mc-fb-msgid" type="text" placeholder="1234567890" style="background:rgba(123,47,255,0.04);border:1px solid rgba(123,47,255,0.2);color:#e0f7fa;padding:9px 12px;font-family:'Share Tech Mono',monospace;font-size:0.6rem;outline:none;width:100%;">
+          </div>
+        </div>
+        <button onclick="saveMasterFirebase()" style="margin-top:14px;padding:10px 22px;background:linear-gradient(135deg,#7b2fff,#5500cc);color:#fff;font-family:'Orbitron',monospace;font-size:0.58rem;font-weight:700;letter-spacing:2px;border:none;cursor:pointer;">💾 SAVE FIREBASE CONFIG</button>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:0.45rem;color:rgba(255,136,0,0.5);margin-top:8px;letter-spacing:1px;">⚠ Changes take effect on next page reload</div>
+      </div>
+
+      <!-- Cloudinary Config -->
+      <div style="background:rgba(0,128,255,0.05);border:1px solid rgba(0,128,255,0.2);padding:20px;margin-bottom:16px;">
+        <div style="font-family:'Orbitron',monospace;font-size:0.65rem;color:#0080ff;letter-spacing:2px;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+          <span style="width:12px;height:1px;background:#0080ff;display:inline-block;"></span> CLOUDINARY CONFIG
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <label style="font-family:'Share Tech Mono',monospace;font-size:0.5rem;color:rgba(0,128,255,0.6);letter-spacing:2px;">CLOUD NAME</label>
+            <input id="mc-cl-name" type="text" placeholder="mycloudname" style="background:rgba(0,128,255,0.04);border:1px solid rgba(0,128,255,0.2);color:#e0f7fa;padding:9px 12px;font-family:'Share Tech Mono',monospace;font-size:0.6rem;outline:none;width:100%;">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <label style="font-family:'Share Tech Mono',monospace;font-size:0.5rem;color:rgba(0,128,255,0.6);letter-spacing:2px;">UPLOAD PRESET</label>
+            <input id="mc-cl-preset" type="text" placeholder="my_preset" style="background:rgba(0,128,255,0.04);border:1px solid rgba(0,128,255,0.2);color:#e0f7fa;padding:9px 12px;font-family:'Share Tech Mono',monospace;font-size:0.6rem;outline:none;width:100%;">
+          </div>
+        </div>
+        <button onclick="saveMasterCloudinary()" style="margin-top:14px;padding:10px 22px;background:linear-gradient(135deg,#0080ff,#0050cc);color:#fff;font-family:'Orbitron',monospace;font-size:0.58rem;font-weight:700;letter-spacing:2px;border:none;cursor:pointer;">💾 SAVE CLOUDINARY CONFIG</button>
+      </div>
+
+      <!-- Feature Lock/Unlock -->
+      <div style="background:rgba(0,245,255,0.03);border:1px solid rgba(0,245,255,0.15);padding:20px;margin-bottom:16px;">
+        <div style="font-family:'Orbitron',monospace;font-size:0.65rem;color:var(--cyan);letter-spacing:2px;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+          <span style="width:12px;height:1px;background:var(--cyan);display:inline-block;"></span> FEATURE LOCK CONTROL
+        </div>
+        <div id="feature-lock-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:0.45rem;color:rgba(0,245,255,0.3);margin-top:10px;letter-spacing:1px;">🔒 Locked features show: "Ask AQERIONX" to regular admins</div>
+      </div>
+
+      <!-- Manage Sub-Admins -->
+      <div style="background:rgba(0,255,136,0.03);border:1px solid rgba(0,255,136,0.2);padding:20px;margin-bottom:16px;">
+        <div style="font-family:'Orbitron',monospace;font-size:0.65rem;color:#00ff88;letter-spacing:2px;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+          <span style="width:12px;height:1px;background:#00ff88;display:inline-block;"></span> MANAGE ADMINS
+        </div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:0.45rem;color:rgba(0,255,136,0.4);letter-spacing:1px;margin-bottom:12px;">
+          ✉ Add admin Gmail accounts — these users can log in to admin panel
+        </div>
+        <div id="admin-list-wrap" style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px;"></div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <input id="new-admin-email" type="email" placeholder="newadmin@gmail.com"
+            style="flex:1;min-width:180px;background:rgba(0,255,136,0.04);border:1px solid rgba(0,255,136,0.2);color:#e0f7fa;padding:9px 12px;font-family:'Share Tech Mono',monospace;font-size:0.6rem;outline:none;">
+          <button onclick="addSubAdmin()" style="padding:9px 18px;background:linear-gradient(135deg,#00ff88,#00cc66);color:#000;font-family:'Orbitron',monospace;font-size:0.55rem;font-weight:700;letter-spacing:2px;border:none;cursor:pointer;white-space:nowrap;">＋ ADD ADMIN</button>
+        </div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:0.42rem;color:rgba(0,255,136,0.3);margin-top:8px;letter-spacing:1px;">⚠ Added admins can log in using their Gmail account via "Sign in with Google"</div>
+      </div>
+
+      <button onclick="closeMasterOverlay()" style="width:100%;padding:11px;background:rgba(255,68,85,0.08);border:1px solid rgba(255,68,85,0.25);color:#ff4455;font-family:'Share Tech Mono',monospace;font-size:0.55rem;letter-spacing:2px;cursor:pointer;">✕ EXIT MASTER CONTROL</button>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div id="main">
+    <div class="main-header">
+      <div>
+        <div class="page-title" id="page-title-el">Dashboard</div>
+        <div class="page-subtitle" id="page-subtitle-el">// OVERVIEW & QUICK STATS</div>
+      </div>
+      <div class="header-actions">
+        <a href="index.html" target="_blank" class="view-site-btn">↗ VIEW WEBSITE</a>
+      </div>
+    </div>
+    <div class="content">
+
+      <!-- ══ DASHBOARD ══ -->
+      <div class="panel active" id="panel-dashboard">
+        <div class="cards-row">
+          <div class="stat-card"><div class="stat-card-num" id="d-total">0</div><div class="stat-card-label">Total Enquiries</div><div class="stat-card-icon">📩</div></div>
+          <div class="stat-card"><div class="stat-card-num" id="d-new">0</div><div class="stat-card-label">New / Unread</div><div class="stat-card-icon">🔔</div></div>
+          <div class="stat-card"><div class="stat-card-num" id="d-done">0</div><div class="stat-card-label">Resolved</div><div class="stat-card-icon">✅</div></div>
+          <div class="stat-card"><div class="stat-card-num" id="d-svcs">6</div><div class="stat-card-label">Services Listed</div><div class="stat-card-icon">⚙️</div></div>
+          <div class="stat-card" onclick="showPanel('hero')" style="cursor:pointer;"><div class="stat-card-num" id="d-reviews" style="font-size:1.2rem;">213+</div><div class="stat-card-label">Google Reviews</div><div class="stat-card-icon">⭐</div></div>
+          <div class="stat-card" onclick="showPanel('hero')" style="cursor:pointer;"><div class="stat-card-num" id="d-rating" style="font-size:1.2rem;">3.9★</div><div class="stat-card-label">Google Rating</div><div class="stat-card-icon">🌟</div></div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">Recent Enquiries</div>
+          <div class="table-wrap">
+            <table class="enq-table">
+              <thead><tr><th>Name</th><th>Phone</th><th>Type</th><th>Time</th><th>Status</th></tr></thead>
+              <tbody id="recent-enquiries"><tr><td colspan="5" class="no-data">LOADING DATA...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ ENQUIRIES ══ -->
+      <div class="panel" id="panel-enquiries">
+        <div class="enq-filter">
+          <button class="filter-btn active" onclick="filterEnq('all',this)">ALL</button>
+          <button class="filter-btn" onclick="filterEnq('new',this)">NEW</button>
+          <button class="filter-btn" onclick="filterEnq('pending',this)">PENDING</button>
+          <button class="filter-btn" onclick="filterEnq('done',this)">RESOLVED</button>
+        </div>
+        <div class="form-section" style="padding:0;overflow:hidden;">
+          <div class="table-wrap">
+            <table class="enq-table">
+              <thead><tr><th>Name</th><th>Phone</th><th>Type</th><th>Message</th><th>Time</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="all-enquiries"><tr><td colspan="7" class="no-data">LOADING...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ APPEARANCE ══ -->
+      <div class="panel" id="panel-appearance">
+
+        <!-- PRESET THEMES -->
+        <div class="form-section">
+          <div class="form-section-title">⚡ Preset Themes — One Click Apply</div>
+          <div class="theme-presets-grid" id="theme-presets-grid">
+            <!-- Injected by JS -->
+          </div>
+        </div>
+
+        <!-- CUSTOM COLORS -->
+        <div class="form-section">
+          <div class="form-section-title">🎨 Custom Colors</div>
+          <div class="form-grid-3">
+            <div class="field"><label>Primary Color</label><input type="color" id="color-cyan" value="#00f5ff"><div class="theme-preview" id="prev-cyan" style="color:#00f5ff;border-color:#00f5ff;">RACE COMPUTER</div></div>
+            <div class="field"><label>Secondary Color</label><input type="color" id="color-blue" value="#0080ff"><div class="theme-preview" id="prev-blue" style="color:#0080ff;border-color:#0080ff;">SERVICES</div></div>
+            <div class="field"><label>Accent Color</label><input type="color" id="color-purple" value="#7b2fff"><div class="theme-preview" id="prev-purple" style="color:#7b2fff;border-color:#7b2fff;">ACCENT</div></div>
+          </div>
+          <div class="theme-live-preview-bar" id="theme-live-bar">
+            <span id="tlb-logo">RACE<span style="color:#fff">.</span>COMPUTER</span>
+            <span id="tlb-badge">◈ LIVE PREVIEW</span>
+            <span id="tlb-stat">15+ YRS</span>
+          </div>
+          <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;">
+            <button class="save-btn" onclick="saveTheme()">💾 SAVE THEME</button>
+            <button class="add-btn" onclick="resetTheme()">↺ RESET DEFAULT</button>
+          </div>
+        </div>
+
+        <!-- BACKGROUND ANIMATION -->
+        <div class="form-section">
+          <div class="form-section-title">🌌 Background Animation</div>
+          <div class="bg-anim-grid" id="bg-anim-grid">
+            <!-- Injected by JS -->
+          </div>
+          <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;">
+            <button class="save-btn" onclick="saveBgAnim()">💾 SAVE ANIMATION</button>
+          </div>
+          <div style="margin-top:12px;font-family:'Share Tech Mono',monospace;font-size:0.5rem;color:rgba(0,245,255,0.3);letter-spacing:1px;line-height:1.8;">
+            ⚠ Background animation change applies to website visitors immediately after saving.
+          </div>
+        </div>
+
+        <!-- DARK / LIGHT MODE -->
+        <div class="form-section">
+          <div class="form-section-title">🌙 Dark / Light Mode</div>
+          <div style="display:flex;gap:14px;flex-wrap:wrap;">
+            <div class="mode-card" id="mode-dark" onclick="selectMode('dark')">
+              <div class="mode-card-screen dark-screen">
+                <div style="width:40%;height:6px;background:#00f5ff;border-radius:1px;margin-bottom:6px;"></div>
+                <div style="width:70%;height:3px;background:rgba(0,245,255,0.3);border-radius:1px;margin-bottom:4px;"></div>
+                <div style="width:55%;height:3px;background:rgba(0,245,255,0.2);border-radius:1px;"></div>
+              </div>
+              <div class="mode-card-label">🌑 DARK MODE</div>
+              <div class="mode-card-desc">Aapki current dark theme</div>
+            </div>
+            <div class="mode-card" id="mode-light" onclick="selectMode('light')">
+              <div class="mode-card-screen light-screen">
+                <div style="width:40%;height:6px;background:#0066ff;border-radius:1px;margin-bottom:6px;"></div>
+                <div style="width:70%;height:3px;background:rgba(0,100,255,0.3);border-radius:1px;margin-bottom:4px;"></div>
+                <div style="width:55%;height:3px;background:rgba(0,100,255,0.2);border-radius:1px;"></div>
+              </div>
+              <div class="mode-card-label">☀️ LIGHT MODE</div>
+              <div class="mode-card-desc">Light background theme</div>
+            </div>
+          </div>
+          <div style="margin-top:14px;">
+            <button class="save-btn" onclick="saveSiteMode()">💾 SAVE MODE</button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ══ HERO ══ -->
+      <div class="panel" id="panel-hero">
+        <div class="form-section">
+          <div class="form-section-title">Hero Section Content</div>
+          <div class="form-grid">
+            <div class="field"><label>Store Name</label><input type="text" id="h-name" placeholder="RACE COMPUTER"></div>
+            <div class="field"><label>Subtitle Line</label><input type="text" id="h-sub" placeholder="// NEXT-GEN TECH HUB · JAIPUR"></div>
+            <div class="field full"><label>Hero Tagline</label><textarea id="h-tagline" rows="3" placeholder="Jaipur's most trusted tech destination..."></textarea></div>
+            <div class="field"><label>Years Active</label><input type="text" id="h-years" placeholder="15+"></div>
+            <div class="field"><label>Google Rating</label><input type="text" id="h-rating" placeholder="3.9★"></div>
+            <div class="field"><label>Total Reviews</label><input type="text" id="h-reviews" placeholder="213+"></div>
+            <div class="field"><label>Happy Customers</label><input type="text" id="h-customers" placeholder="5000+"></div>
+          </div>
+          <button class="save-btn" style="margin-top:16px;" onclick="saveHero()">💾 SAVE HERO SECTION</button>
+        </div>
+      </div>
+
+      <!-- ══ CONTACT INFO ══ -->
+      <div class="panel" id="panel-contact-info">
+        <div class="form-section">
+          <div class="form-section-title">Contact Details</div>
+          <div class="form-grid">
+            <div class="field"><label>Phone Number</label><input type="text" id="ci-phone" placeholder="+91 XXXXX XXXXX"></div>
+            <div class="field"><label>WhatsApp Number (with country code)</label><input type="text" id="ci-wa" placeholder="919876543210"></div>
+            <div class="field full"><label>Email Address</label><input type="email" id="ci-email" placeholder="info@racecomputer.in"></div>
+            <div class="field full"><label>Full Address</label><textarea id="ci-address" rows="3" placeholder="Shop address..."></textarea></div>
+            <div class="field full"><label>Business Hours</label><textarea id="ci-hours" rows="2" placeholder="Mon – Sat: 10AM – 8PM&#10;Sunday: Closed"></textarea></div>
+          </div>
+          <button class="save-btn" style="margin-top:16px;" onclick="saveContact()">💾 SAVE CONTACT INFO</button>
+        </div>
+      </div>
+
+      <!-- ══ SERVICES ══ -->
+      <div class="panel" id="panel-services">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+          <div style="font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:rgba(0,245,255,0.4);letter-spacing:2px;">MANAGE SERVICE CARDS · DRAG TO REORDER</div>
+          <button class="add-btn" onclick="addService()">＋ ADD SERVICE</button>
+        </div>
+        <div id="services-editor"></div>
+      </div>
+
+      <!-- ══ PRODUCTS ══ -->
+      <div class="panel" id="panel-products">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+          <div style="font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:rgba(0,245,255,0.4);letter-spacing:2px;">MANAGE PRODUCT CAROUSEL CARDS</div>
+          <button class="add-btn" onclick="addProduct()">＋ ADD PRODUCT</button>
+        </div>
+        <div id="products-editor"></div>
+      </div>
+
+      <!-- ══ GALLERY ══ -->
+      <div class="panel" id="panel-gallery">
+        <div class="form-section">
+          <div class="form-section-title">📸 Store Gallery — Cloudinary Image Upload</div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:0.5rem;color:rgba(0,245,255,0.35);letter-spacing:1px;margin-bottom:18px;line-height:1.8;">
+            Yahan se apni store ki real photos upload karo. Ye photos website ke "Our Store" gallery section mein dikhegi.<br>
+            Maximum 10 photos recommended · JPEG/PNG/WEBP supported · Auto-optimized by Cloudinary
+          </div>
+
+          <!-- Upload new photo -->
+          <div style="background:rgba(0,245,255,0.03);border:1px dashed rgba(0,245,255,0.2);padding:20px;margin-bottom:20px;border-radius:4px;">
+            <div style="font-family:'Orbitron',monospace;font-size:0.62rem;color:var(--cyan);letter-spacing:2px;margin-bottom:14px;">＋ UPLOAD NEW PHOTO</div>
+            <div class="form-grid">
+              <div class="field">
+                <label>Photo Label (kya hai ye photo?)</label>
+                <input type="text" id="gal-label" placeholder="Our Showroom, Laptop Section...">
+              </div>
+              <div class="field">
+                <label>Sub-label (optional)</label>
+                <input type="text" id="gal-sub" placeholder="Sanganer Bazar, Jaipur">
+              </div>
+              <div class="field">
+                <label>Badge Text (optional)</label>
+                <input type="text" id="gal-badge" placeholder="STORE, ASUS, REPAIR...">
+              </div>
+              <div class="field">
+                <label>Size (gallery mein)</label>
+                <select id="gal-size">
+                  <option value="normal">Normal</option>
+                  <option value="big">Big (wide card)</option>
+                </select>
+              </div>
+            </div>
+            <div style="margin-top:14px;">
+              <div class="img-preview" id="gal-new-preview" style="height:160px;">
+                <span class="img-placeholder">🖼️</span>
+              </div>
+              <label class="upload-btn" id="gal-upload-btn" style="margin-top:8px;">
+                📤 SELECT & UPLOAD IMAGE
+                <input type="file" accept="image/*" style="display:none" id="gal-file-input" onchange="handleGalleryUpload(event)">
+              </label>
+              <div class="upload-progress" id="gal-upload-prog"></div>
+            </div>
+          </div>
+
+          <!-- Gallery grid -->
+          <div style="font-family:'Orbitron',monospace;font-size:0.62rem;color:var(--cyan);letter-spacing:2px;margin-bottom:14px;">📋 CURRENT GALLERY PHOTOS</div>
+          <div id="gallery-editor" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;"></div>
+          <div id="gallery-empty" style="display:none;text-align:center;padding:40px;font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:rgba(0,245,255,0.2);letter-spacing:3px;">
+            // NO PHOTOS UPLOADED YET
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ BRANCHES ══ -->
+      <div class="panel" id="panel-branches">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+          <div style="font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:rgba(0,245,255,0.4);letter-spacing:2px;">MANAGE STORE BRANCHES · SET MAIN BRANCH</div>
+          <button class="add-btn" onclick="addBranch()">＋ ADD BRANCH</button>
+        </div>
+        <div id="branches-editor"></div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<div class="toast" id="toast"></div>
+
+<!-- FIREBASE + ADMIN LOGIC -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, get, update, remove, onValue, push, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getAuth, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+// ══ FIREBASE CONFIG ══
+const firebaseConfig = {
+  apiKey: "AIzaSyAUBOLBLdbVIwUTXmBz6v8wMzX35Kg8Xuo",
+  authDomain: "racecomputers-e2850.firebaseapp.com",
+  projectId: "racecomputers-e2850",
+  storageBucket: "racecomputers-e2850.firebasestorage.app",
+  messagingSenderId: "1013982271144",
+  appId: "1:1013982271144:web:add2050cc122c381b9d49d",
+  databaseURL: "https://racecomputers-e2850-default-rtdb.asia-southeast1.firebasedatabase.app"
+};
+
+// ══ CLOUDINARY CONFIG ══
+const CLOUDINARY_CONFIG = {
+  cloudName: "dbxfqh6zz",
+  uploadPreset: "racecomp"
+};
+
+let app, db, auth;
+let allEnquiries = [];
+let currentFilter = 'all';
+let localServices = [];
+let localProducts = [];
+let localBranches = [];
+
+try {
+  app = initializeApp(firebaseConfig);
+  db = getDatabase(app);
+  auth = getAuth(app);
+  // Expose for master admin non-module script
+  window._db = db;
+  window._ref = ref;
+  window._get = get;
+  window._set = set;
+  window._remove = remove;
+  setDbStatus(true);
+} catch(e) {
+  setDbStatus(false);
+  console.error("Firebase init failed:", e);
+}
+
+function setDbStatus(connected) {
+  const dot = document.getElementById('db-dot');
+  const txt = document.getElementById('db-status');
+  if(dot) dot.className = 'status-dot' + (connected?'':' red');
+  if(txt) txt.textContent = connected ? 'FIREBASE CONNECTED' : 'NOT CONNECTED';
+}
+
+// ── AUTH ──
+if(auth) {
+  onAuthStateChanged(auth, async user => {
+    if(user) {
+      // Check if user is authorized: master email OR in Firebase admins list
+      const userEmail = user.email || '';
+      const isMaster = userEmail === (window.MASTER_EMAIL || 'manmohansharma002008@gmail.com');
+      let isAuthorized = isMaster;
+      
+      if(!isAuthorized && db) {
+        try {
+          // Check admins node in Firebase
+          const adminKey = userEmail.replace(/\./g,'_dot_').replace(/@/g,'_at_');
+          const snap = await get(ref(db, 'admins/' + adminKey));
+          if(snap.exists()) isAuthorized = true;
+        } catch(e) { console.warn('Admin check failed:', e); }
+      }
+
+      if(!isAuthorized) {
+        // Not authorized — sign them out
+        await signOut(auth);
+        const errEl = document.getElementById('login-err');
+        if(errEl) errEl.textContent = '✕ Access denied. Contact AQERIONX to get admin access.';
+        return;
+      }
+
+      document.getElementById('login-screen').classList.add('hidden');
+      // Fix: use block on mobile to avoid flex override issues, then CSS handles it
+      const appEl = document.getElementById('app');
+      appEl.style.display = '';   // clear inline, let CSS take over
+      appEl.removeAttribute('style'); // fully remove so CSS media query works
+      // For desktop explicitly set flex
+      if(window.innerWidth > 768) {
+        appEl.style.display = 'flex';
+      }
+      // Show mobile bottom nav
+      const isMobile = window.matchMedia('(max-width:768px)').matches;
+      const mbn = document.getElementById('mobile-bottom-nav');
+      if(mbn && isMobile) mbn.style.display = 'flex';
+      // Show hamburger menu btn
+      const menuBtn = document.getElementById('mob-menu-btn');
+      if(menuBtn) menuBtn.style.display = 'flex';
+      const infoEl = document.getElementById('admin-user-info');
+      const emailEl = document.getElementById('admin-email');
+      if(infoEl) infoEl.style.display = 'block';
+      if(emailEl) emailEl.textContent = user.displayName || user.email;
+      initAdmin();
+    } else {
+      document.getElementById('login-screen').classList.remove('hidden');
+      const appEl = document.getElementById('app');
+      appEl.style.display = 'none';
+      const mbn = document.getElementById('mobile-bottom-nav');
+      if(mbn) mbn.style.display = 'none';
+      const infoEl = document.getElementById('admin-user-info');
+      if(infoEl) infoEl.style.display = 'none';
+    }
+  });
+}
+
+window.doGoogleLogin = async function() {
+  const errEl = document.getElementById('login-err');
+  errEl.textContent = '';
+  try {
+    const provider = new GoogleAuthProvider();
+    await signInWithPopup(auth, provider);
+  } catch(e) {
+    const msgs = {
+      'auth/popup-closed-by-user': 'Sign-in popup closed.',
+      'auth/cancelled-popup-request': 'Sign-in cancelled.',
+      'auth/unauthorized-domain': 'This domain is not authorized in Firebase Console.',
+      'auth/operation-not-allowed': 'Google sign-in not enabled in Firebase Console.'
+    };
+    errEl.textContent = msgs[e.code] || 'Google login failed: ' + e.message;
+  }
+};
+
+window.doLogin = async function() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  const errEl = document.getElementById('login-err');
+  errEl.textContent = '';
+  if(!email || !pass){ errEl.textContent = 'Please enter email and password.'; return; }
+  try {
+    await signInWithEmailAndPassword(auth, email, pass);
+  } catch(e) {
+    const msgs = {
+      'auth/invalid-credential': 'Invalid email or password.',
+      'auth/user-not-found': 'User not found.',
+      'auth/wrong-password': 'Incorrect password.',
+      'auth/too-many-requests': 'Too many attempts. Try later.'
+    };
+    errEl.textContent = msgs[e.code] || 'Login failed: ' + e.message;
+  }
+};
+
+window.doLogout = async function() {
+  if(auth) await signOut(auth);
+};
+
+document.addEventListener('keydown', e => {
+  if(e.key === 'Enter' && !document.getElementById('login-screen').classList.contains('hidden')) doLogin();
+});
+
+// ── INIT ADMIN ──
+function initAdmin() {
+  loadSettings();
+  listenEnquiries();
+  loadServicesEditor();
+  loadProductsEditor();
+  loadBranchesEditor();
+}
+
+// ── SETTINGS ──
+async function loadSettings() {
+  if(!db) return;
+  try {
+    const snap = await get(ref(db, "settings/site"));
+    if(snap.exists()) {
+      const d = snap.val();
+      if(d.themeColor) document.getElementById('color-cyan').value = d.themeColor;
+      if(d.themeBlue) document.getElementById('color-blue').value = d.themeBlue;
+      if(d.themePurple) document.getElementById('color-purple').value = d.themePurple;
+      updatePreviews();
+      if(d.bgAnimation) { selectedBgAnim = d.bgAnimation; renderBgAnimGrid(); }
+      if(d.siteMode) { selectMode(d.siteMode); }
+      if(d.storeName) document.getElementById('h-name').value = d.storeName;
+      if(d.heroSubtitle) document.getElementById('h-sub').value = d.heroSubtitle;
+      if(d.heroTagline) document.getElementById('h-tagline').value = d.heroTagline;
+      if(d.stats) {
+        setValue('h-years', d.stats.years);
+        setValue('h-rating', d.stats.rating);
+        setValue('h-reviews', d.stats.reviews);
+        setValue('h-customers', d.stats.customers);
+        // Update dashboard stat cards
+        const dr = document.getElementById('d-reviews');
+        const drat = document.getElementById('d-rating');
+        if(dr && d.stats.reviews) dr.textContent = d.stats.reviews;
+        if(drat && d.stats.rating) drat.textContent = d.stats.rating;
+      }
+      setValue('ci-phone', d.phone);
+      setValue('ci-wa', d.whatsapp);
+      setValue('ci-email', d.email);
+      setValue('ci-address', d.address);
+      setValue('ci-hours', d.hours);
+    }
+  } catch(e) { console.warn("loadSettings:", e); }
+}
+
+function setValue(id, val) { const el = document.getElementById(id); if(el && val) el.value = val; }
+
+document.getElementById('color-cyan').addEventListener('input', updatePreviews);
+document.getElementById('color-blue').addEventListener('input', updatePreviews);
+document.getElementById('color-purple').addEventListener('input', updatePreviews);
+function updatePreviews() {
+  const c = document.getElementById('color-cyan').value;
+  const b = document.getElementById('color-blue').value;
+  const p = document.getElementById('color-purple').value;
+  document.getElementById('prev-cyan').style.cssText = `color:${c};border-color:${c};background:${c}11;`;
+  document.getElementById('prev-blue').style.cssText = `color:${b};border-color:${b};background:${b}11;`;
+  document.getElementById('prev-purple').style.cssText = `color:${p};border-color:${p};background:${p}11;`;
+}
+
+window.saveTheme = async function() {
+  if(!db){ showToast('Firebase not connected', true); return; }
+  try {
+    await update(ref(db, "settings/site"), {
+      themeColor: document.getElementById('color-cyan').value,
+      themeBlue: document.getElementById('color-blue').value,
+      themePurple: document.getElementById('color-purple').value,
+      themeId: selectedThemeId,
+    });
+    showToast('✓ Theme saved! Website updated.', false, true);
+  } catch(e) { showToast('Save failed: ' + e.message, true); }
+};
+
+window.resetTheme = function() {
+  document.getElementById('color-cyan').value = '#00f5ff';
+  document.getElementById('color-blue').value = '#0080ff';
+  document.getElementById('color-purple').value = '#7b2fff';
+  updatePreviews();
+};
+
+// ════════════════════════════════════════
+//  PRESET THEMES
+// ════════════════════════════════════════
+const PRESET_THEMES = [
+  { id:'cyber-blue',   name:'Cyber Blue',     desc:'Classic neon blue',   cyan:'#00f5ff', blue:'#0080ff', purple:'#7b2fff', dark:'#020810', darker:'#010508' },
+  { id:'neon-green',   name:'Neon Matrix',    desc:'Hacker green glow',   cyan:'#00ff88', blue:'#00cc55', purple:'#007733', dark:'#010f05', darker:'#010802' },
+  { id:'crimson-fire', name:'Crimson Fire',   desc:'Red hot energy',      cyan:'#ff4455', blue:'#ff2200', purple:'#cc0033', dark:'#100205', darker:'#080102' },
+  { id:'gold-luxury',  name:'Gold Luxe',      desc:'Premium gold & black',cyan:'#ffd700', blue:'#ff9900', purple:'#cc7700', dark:'#0f0a00', darker:'#080600' },
+  { id:'violet-haze',  name:'Violet Haze',    desc:'Deep purple dream',   cyan:'#cc44ff', blue:'#8800ff', purple:'#5500cc', dark:'#08010f', darker:'#050108' },
+  { id:'arctic-ice',   name:'Arctic Ice',     desc:'Cool white ice',      cyan:'#aaeeff', blue:'#66ccff', purple:'#3399ee', dark:'#010a14', darker:'#010810' },
+  { id:'solar-orange', name:'Solar Flare',    desc:'Warm orange power',   cyan:'#ff8800', blue:'#ff5500', purple:'#cc3300', dark:'#0f0500', darker:'#080300' },
+  { id:'rose-pink',    name:'Rose Gold',      desc:'Pink neon vibes',     cyan:'#ff66cc', blue:'#ff2299', purple:'#cc0077', dark:'#0f0008', darker:'#080005' },
+  { id:'teal-mint',    name:'Teal Mint',      desc:'Fresh teal glow',     cyan:'#00ffcc', blue:'#00cc99', purple:'#009966', dark:'#010f0a', darker:'#010806' },
+  { id:'white-stark',  name:'Stark White',    desc:'Clean & minimal',     cyan:'#ffffff', blue:'#cccccc', purple:'#999999', dark:'#111111', darker:'#0a0a0a' },
+  { id:'lava-red',     name:'Lava Red',       desc:'Deep red inferno',    cyan:'#ff3300', blue:'#cc1100', purple:'#990000', dark:'#0f0100', darker:'#080100' },
+  { id:'electric-lime',name:'Electric Lime',  desc:'High voltage lime',   cyan:'#ccff00', blue:'#99ee00', purple:'#66cc00', dark:'#090f00', darker:'#050800' },
+];
+
+let selectedThemeId = 'cyber-blue';
+let selectedBgAnim = 'particles';
+let selectedMode = 'dark';
+
+function renderPresetThemes() {
+  const grid = document.getElementById('theme-presets-grid');
+  if(!grid) return;
+  grid.innerHTML = PRESET_THEMES.map(t => `
+    <div class="theme-preset-card ${selectedThemeId===t.id?'selected':''}"
+      style="border-color:${t.cyan}33;background:linear-gradient(135deg,${t.darker},${t.dark});"
+      onclick="applyPresetTheme('${t.id}')">
+      <div class="tpc-swatch">
+        <div class="tpc-dot" style="background:${t.cyan};box-shadow:0 0 8px ${t.cyan};"></div>
+        <div class="tpc-dot" style="background:${t.blue};box-shadow:0 0 8px ${t.blue};"></div>
+        <div class="tpc-dot" style="background:${t.purple};box-shadow:0 0 8px ${t.purple};"></div>
+      </div>
+      <div class="tpc-name" style="color:${t.cyan};">${t.name}</div>
+      <div class="tpc-desc" style="color:${t.cyan};">${t.desc}</div>
+      <div class="tpc-bars">
+        <div class="tpc-bar" style="width:80%;background:${t.cyan};"></div>
+        <div class="tpc-bar" style="width:55%;background:${t.blue};"></div>
+        <div class="tpc-bar" style="width:35%;background:${t.purple};"></div>
+      </div>
+    </div>`).join('');
+}
+
+window.applyPresetTheme = function(id) {
+  const t = PRESET_THEMES.find(x => x.id === id);
+  if(!t) return;
+  selectedThemeId = id;
+  document.getElementById('color-cyan').value = t.cyan;
+  document.getElementById('color-blue').value = t.blue;
+  document.getElementById('color-purple').value = t.purple;
+  updatePreviews();
+  renderPresetThemes();
+  updateLiveBar(t.cyan, t.blue);
+  showToast(`✓ Theme "${t.name}" applied! Hit SAVE to confirm.`, false, false);
+};
+
+function updateLiveBar(cyan, blue) {
+  const bar = document.getElementById('theme-live-bar');
+  if(!bar) return;
+  bar.style.cssText = `margin-top:18px;padding:14px 20px;border:1px solid ${cyan}44;display:flex;align-items:center;justify-content:space-between;font-family:'Orbitron',monospace;font-size:0.65rem;letter-spacing:2px;transition:all 0.3s;background:linear-gradient(90deg,${cyan}0a,${blue}0a);`;
+  document.getElementById('tlb-logo').style.color = cyan;
+  document.getElementById('tlb-badge').style.cssText = `color:${cyan};border:1px solid ${cyan}44;padding:4px 10px;font-size:0.5rem;`;
+  document.getElementById('tlb-stat').style.color = blue;
+}
+
+// Extend updatePreviews to also update live bar
+const _origUpdatePreviews = window.updatePreviews || function(){};
+window.updatePreviews = function() {
+  _origUpdatePreviews();
+  const c = document.getElementById('color-cyan').value;
+  const b = document.getElementById('color-blue').value;
+  updateLiveBar(c, b);
+};
+
+// ════════════════════════════════════════
+//  BACKGROUND ANIMATIONS
+// ════════════════════════════════════════
+const BG_ANIMATIONS = [
+  { id:'particles',  name:'Particles',    desc:'Floating dots',    preview:'anim-particles' },
+  { id:'grid',       name:'Cyber Grid',   desc:'Animated grid',    preview:'anim-grid-bg'   },
+  { id:'waves',      name:'Waves',        desc:'Smooth waves',     preview:'anim-waves'     },
+  { id:'matrix',     name:'Matrix Rain',  desc:'Code falling',     preview:'anim-matrix'    },
+  { id:'nebula',     name:'Nebula',       desc:'Space clouds',     preview:'anim-nebula'    },
+  { id:'hexagon',    name:'Hexagons',     desc:'Hex grid pattern', preview:'anim-hexagon'   },
+  { id:'aurora',     name:'Aurora',       desc:'Northern lights',  preview:'anim-aurora'    },
+  { id:'starfield',  name:'Starfield',    desc:'Deep space stars', preview:'anim-starfield' },
+  { id:'circuit',    name:'Circuit',      desc:'PCB traces',       preview:'anim-circuit'   },
+  { id:'none',       name:'None',         desc:'Solid background', preview:'anim-none'      },
+];
+
+function renderBgAnimGrid() {
+  const grid = document.getElementById('bg-anim-grid');
+  if(!grid) return;
+  grid.innerHTML = BG_ANIMATIONS.map(a => `
+    <div class="bg-anim-card ${selectedBgAnim===a.id?'selected':''}" onclick="selectBgAnim('${a.id}')">
+      <div class="bg-anim-preview ${a.preview}" id="bap-${a.id}">
+        ${getBgAnimMiniPreview(a.id)}
+      </div>
+      <div class="bg-anim-label">${a.name}<br><span style="font-size:0.38rem;opacity:0.5;letter-spacing:1px;">${a.desc}</span></div>
+    </div>`).join('');
+}
+
+function getBgAnimMiniPreview(id) {
+  const c = { particles: `<svg width="100%" height="80" xmlns="http://www.w3.org/2000/svg">${[...Array(12)].map((_,i)=>`<circle cx="${10+i*8}" cy="${20+Math.sin(i)*18}" r="${1+Math.random()}" fill="#00f5ff" opacity="${0.3+Math.random()*0.5}"/>`).join('')}</svg>`,
+    grid: ``,
+    waves: `<svg width="100%" height="80" xmlns="http://www.w3.org/2000/svg"><path d="M0 50 Q25 30 50 50 T100 50 T150 50 T200 50" stroke="#00f5ff" stroke-width="1.5" fill="none" opacity="0.4"/><path d="M0 60 Q25 40 50 60 T100 60 T150 60 T200 60" stroke="#0080ff" stroke-width="1" fill="none" opacity="0.3"/></svg>`,
+    matrix: `<div style="font-family:'Share Tech Mono';font-size:7px;color:#00ff41;padding:4px;line-height:1.3;opacity:0.7">01 10 11<br>10 01 00<br>11 00 10<br>01 11 01</div>`,
+    nebula: ``,
+    hexagon: `<svg width="100%" height="80" xmlns="http://www.w3.org/2000/svg"><polygon points="40,15 60,15 70,32 60,49 40,49 30,32" fill="none" stroke="#00f5ff" stroke-width="0.8" opacity="0.3"/><polygon points="60,30 80,30 90,47 80,64 60,64 50,47" fill="none" stroke="#0080ff" stroke-width="0.8" opacity="0.2"/></svg>`,
+    aurora: `<div style="width:100%;height:80px;background:linear-gradient(135deg,rgba(0,255,136,0.15),rgba(0,128,255,0.1),rgba(123,47,255,0.15));"></div>`,
+    starfield: `<svg width="100%" height="80" xmlns="http://www.w3.org/2000/svg">${[...Array(20)].map((_,i)=>`<circle cx="${Math.random()*200}" cy="${Math.random()*80}" r="${Math.random()>0.8?1.5:0.7}" fill="#fff" opacity="${0.3+Math.random()*0.6}"/>`).join('')}</svg>`,
+    circuit: `<svg width="100%" height="80" xmlns="http://www.w3.org/2000/svg"><line x1="10" y1="20" x2="60" y2="20" stroke="#00f5ff" stroke-width="0.8" opacity="0.3"/><line x1="60" y1="20" x2="60" y2="50" stroke="#00f5ff" stroke-width="0.8" opacity="0.3"/><circle cx="60" cy="50" r="2" fill="#00f5ff" opacity="0.4"/><line x1="60" y1="50" x2="120" y2="50" stroke="#0080ff" stroke-width="0.8" opacity="0.3"/><circle cx="30" cy="20" r="2" fill="#00f5ff" opacity="0.4"/></svg>`,
+    none: `<div style="display:flex;align-items:center;justify-content:center;height:80px;color:rgba(200,240,255,0.2);font-family:'Share Tech Mono';font-size:0.55rem;letter-spacing:2px;">NO ANIM</div>`,
+  };
+  return c[id] || '';
+}
+
+window.selectBgAnim = function(id) {
+  selectedBgAnim = id;
+  renderBgAnimGrid();
+  showToast(`✓ Animation "${BG_ANIMATIONS.find(a=>a.id===id)?.name}" selected. Hit SAVE to apply.`, false, false);
+};
+
+window.saveBgAnim = async function() {
+  if(!db){ showToast('Firebase not connected', true); return; }
+  try {
+    await update(ref(db, "settings/site"), { bgAnimation: selectedBgAnim });
+    showToast('✓ Background animation saved! Website updated.', false, true);
+  } catch(e) { showToast('Save failed: ' + e.message, true); }
+};
+
+// ════════════════════════════════════════
+//  MODE (DARK / LIGHT)
+// ════════════════════════════════════════
+window.selectMode = function(mode) {
+  selectedMode = mode;
+  document.getElementById('mode-dark').classList.toggle('selected', mode==='dark');
+  document.getElementById('mode-light').classList.toggle('selected', mode==='light');
+};
+
+window.saveSiteMode = async function() {
+  if(!db){ showToast('Firebase not connected', true); return; }
+  try {
+    await update(ref(db, "settings/site"), { siteMode: selectedMode });
+    showToast(`✓ Mode "${selectedMode}" saved!`, false, true);
+  } catch(e) { showToast('Save failed: ' + e.message, true); }
+};
+
+// Init renders (on DOM ready they'll run once panel is opened)
+setTimeout(() => {
+  renderPresetThemes();
+  renderBgAnimGrid();
+  selectMode(selectedMode);
+  updateLiveBar('#00f5ff','#0080ff');
+}, 500);
+
+window.saveHero = async function() {
+  if(!db){ showToast('Firebase not connected', true); return; }
+  try {
+    await update(ref(db, "settings/site"), {
+      storeName: document.getElementById('h-name').value,
+      heroSubtitle: document.getElementById('h-sub').value,
+      heroTagline: document.getElementById('h-tagline').value,
+      stats: {
+        years: document.getElementById('h-years').value,
+        rating: document.getElementById('h-rating').value,
+        reviews: document.getElementById('h-reviews').value,
+        customers: document.getElementById('h-customers').value,
+      }
+    });
+    showToast('✓ Hero section saved!', false, true);
+  } catch(e) { showToast('Save failed: ' + e.message, true); }
+};
+
+window.saveContact = async function() {
+  if(!db){ showToast('Firebase not connected', true); return; }
+  try {
+    await update(ref(db, "settings/site"), {
+      phone: document.getElementById('ci-phone').value,
+      whatsapp: document.getElementById('ci-wa').value,
+      email: document.getElementById('ci-email').value,
+      address: document.getElementById('ci-address').value,
+      hours: document.getElementById('ci-hours').value,
+    });
+    showToast('✓ Contact info saved!', false, true);
+  } catch(e) { showToast('Save failed: ' + e.message, true); }
+};
+
+// ── ENQUIRIES (real-time) ──
+function listenEnquiries() {
+  if(!db) return;
+  onValue(ref(db, "enquiries"), snap => {
+    allEnquiries = [];
+    if(snap.exists()) {
+      snap.forEach(child => {
+        allEnquiries.push({ id: child.key, ...child.val() });
+      });
+      // Sort by timestamp descending
+      allEnquiries.sort((a,b) => (b.timestamp||0) - (a.timestamp||0));
+    }
+    renderEnquiries();
+    updateDashboard();
+  });
+}
+
+function updateDashboard() {
+  const total = allEnquiries.length;
+  const newCount = allEnquiries.filter(e => e.status === 'new' || !e.status).length;
+  const done = allEnquiries.filter(e => e.status === 'done').length;
+  document.getElementById('d-total').textContent = total;
+  document.getElementById('d-new').textContent = newCount;
+  document.getElementById('d-done').textContent = done;
+  const badge = document.getElementById('new-badge');
+  if(newCount > 0){ badge.textContent = newCount; badge.style.display = 'inline-flex'; }
+  else badge.style.display = 'none';
+
+  const recent = allEnquiries.slice(0, 5);
+  const tbody = document.getElementById('recent-enquiries');
+  tbody.innerHTML = recent.length ? recent.map(e => `
+    <tr>
+      <td>${e.name||'-'}</td>
+      <td><a href="tel:${e.phone}" style="color:var(--cyan);text-decoration:none;">${e.phone||'-'}</a></td>
+      <td>${e.type||'-'}</td>
+      <td style="font-family:'Share Tech Mono',monospace;font-size:0.55rem;color:rgba(0,245,255,0.4);">${formatTime(e.timestamp)}</td>
+      <td><span class="status-badge ${e.status||'new'}">${e.status||'new'}</span></td>
+    </tr>`).join('') : '<tr><td colspan="5" class="no-data">NO ENQUIRIES YET</td></tr>';
+}
+
+window.filterEnq = function(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderEnquiries();
+};
+
+function renderEnquiries() {
+  const list = currentFilter === 'all' ? allEnquiries : allEnquiries.filter(e => {
+    if(currentFilter === 'new') return !e.status || e.status === 'new';
+    return e.status === currentFilter;
+  });
+  const tbody = document.getElementById('all-enquiries');
+  tbody.innerHTML = list.length ? list.map(e => `
+    <tr>
+      <td><strong>${e.name||'-'}</strong></td>
+      <td><a href="tel:${e.phone}" style="color:var(--cyan);text-decoration:none;">${e.phone||'-'}</a></td>
+      <td style="font-size:0.75rem;">${e.type||'-'}</td>
+      <td style="max-width:200px;font-size:0.78rem;color:rgba(200,240,255,0.5);">${(e.message||'-').slice(0,80)}${(e.message||'').length>80?'...':''}</td>
+      <td style="font-family:'Share Tech Mono',monospace;font-size:0.52rem;color:rgba(0,245,255,0.4);white-space:nowrap;">${formatTime(e.timestamp)}</td>
+      <td><span class="status-badge ${e.status||'new'}">${e.status||'new'}</span></td>
+      <td>
+        <div class="enq-actions">
+          <button class="enq-btn done-btn" onclick="markDone('${e.id}')">✓ DONE</button>
+          <button class="enq-btn" onclick="markStatus('${e.id}','pending')" style="color:var(--orange);border-color:rgba(255,136,0,0.3);background:rgba(255,136,0,0.05);">⏳</button>
+          <button class="enq-btn del-enq" onclick="deleteEnq('${e.id}')">✕</button>
+        </div>
+      </td>
+    </tr>`).join('') : `<tr><td colspan="7" class="no-data">NO ${currentFilter.toUpperCase()} ENQUIRIES</td></tr>`;
+}
+
+window.markDone = async function(id) {
+  if(!db) return;
+  await update(ref(db, `enquiries/${id}`), { status: "done" });
+};
+window.markStatus = async function(id, status) {
+  if(!db) return;
+  await update(ref(db, `enquiries/${id}`), { status });
+};
+window.deleteEnq = async function(id) {
+  if(!db || !confirm('Delete this enquiry?')) return;
+  await remove(ref(db, `enquiries/${id}`));
+  showToast('Enquiry deleted.', false, true);
+};
+
+function formatTime(ts) {
+  if(!ts) return '-';
+  const d = new Date(ts);
+  return d.toLocaleDateString('en-IN', { day:'2-digit', month:'short' }) + ' ' + d.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
+}
+
+// ── SERVICES EDITOR ──
+async function loadServicesEditor() {
+  if(!db) { localServices = getDefaultServices(); renderServicesEditor(); return; }
+  try {
+    const snap = await get(ref(db, "services"));
+    if(!snap.exists()) {
+      localServices = getDefaultServices();
+    } else {
+      localServices = [];
+      snap.forEach(child => localServices.push({ id: child.key, ...child.val() }));
+      localServices.sort((a,b)=>(a.order||0)-(b.order||0));
+    }
+    document.getElementById('d-svcs').textContent = localServices.length;
+    renderServicesEditor();
+  } catch(e) { console.warn(e); localServices = getDefaultServices(); renderServicesEditor(); }
+}
+
+function getDefaultServices() {
+  return [
+    { icon:"💻", num:"01", title:"Desktop & Laptops", desc:"Latest PCs, gaming rigs and laptops from top brands. Custom assembled systems tailored to your budget.", order:0 },
+    { icon:"📱", num:"02", title:"Mobile Phones", desc:"Authorized ASUS dealer. Latest smartphones at competitive prices with genuine manufacturer warranty.", order:1 },
+    { icon:"🖨️", num:"03", title:"Printers & Peripherals", desc:"Inkjet, laser, multifunction printers. Keyboards, mice, headphones — all in one place.", order:2 },
+    { icon:"🔧", num:"04", title:"Repair & Service", desc:"Expert hardware & software repair for laptops, PCs & mobiles. Fast turnaround with genuine parts.", order:3 },
+    { icon:"🌐", num:"05", title:"Networking Solutions", desc:"WiFi routers, switches, LAN cables and complete network setup for homes & businesses.", order:4 },
+    { icon:"🛡️", num:"06", title:"AMC & Support", desc:"Annual Maintenance Contracts for offices. On-site & remote support to keep systems running.", order:5 }
+  ];
+}
+
+function renderServicesEditor() {
+  const container = document.getElementById('services-editor');
+  container.innerHTML = localServices.map((s,i) => `
+    <div class="service-editor-item" data-index="${i}">
+      <div class="service-item-header">
+        <div class="service-item-title">${s.icon||'📦'} SERVICE ${String(i+1).padStart(2,'0')}</div>
+        <button class="del-btn" onclick="deleteService(${i})">✕ REMOVE</button>
+      </div>
+      <div class="form-grid">
+        <div class="field"><label>Icon (Emoji)</label><input type="text" value="${s.icon||''}" onchange="updateService(${i},'icon',this.value)" style="font-size:1.2rem;"></div>
+        <div class="field"><label>Number Label</label><input type="text" value="${s.num||''}" onchange="updateService(${i},'num',this.value)" placeholder="01"></div>
+        <div class="field full"><label>Service Title</label><input type="text" value="${s.title||''}" onchange="updateService(${i},'title',this.value)" placeholder="Service name"></div>
+        <div class="field full"><label>Description</label><textarea onchange="updateService(${i},'desc',this.value)" rows="2">${s.desc||''}</textarea></div>
+      </div>
+    </div>`).join('');
+  container.innerHTML += `<div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
+    <button class="save-btn" onclick="saveServices()">💾 SAVE ALL SERVICES</button>
+  </div>`;
+}
+
+window.updateService = function(i, key, val) { localServices[i][key] = val; };
+window.addService = function() {
+  localServices.push({ icon:"🆕", num:String(localServices.length+1).padStart(2,'0'), title:"New Service", desc:"Describe this service...", order:localServices.length });
+  renderServicesEditor();
+};
+window.deleteService = function(i) {
+  if(confirm('Remove this service?')) { localServices.splice(i,1); renderServicesEditor(); }
+};
+window.saveServices = async function() {
+  if(!db){ showToast('Firebase not connected',true); return; }
+  try {
+    const servicesObj = {};
+    localServices.forEach((s,i) => {
+      const key = s.id || ('svc_' + i);
+      servicesObj[key] = { ...s, order: i, id: undefined };
+    });
+    await set(ref(db, "services"), servicesObj);
+    showToast('✓ Services saved!', false, true);
+    document.getElementById('d-svcs').textContent = localServices.length;
+  } catch(e){ showToast('Save failed: '+e.message,true); }
+};
+
+// ── PRODUCTS EDITOR ──
+async function loadProductsEditor() {
+  if(!db) { localProducts = getDefaultProducts(); renderProductsEditor(); return; }
+  try {
+    const snap = await get(ref(db, "products"));
+    if(!snap.exists()) {
+      localProducts = getDefaultProducts();
+    } else {
+      localProducts = [];
+      snap.forEach(child => localProducts.push({ id: child.key, ...child.val() }));
+      localProducts.sort((a,b)=>(a.order||0)-(b.order||0));
+    }
+    renderProductsEditor();
+  } catch(e){ console.warn(e); localProducts = getDefaultProducts(); renderProductsEditor(); }
+}
+
+function getDefaultProducts() {
+  return [
+    { icon:"💻", badge:"ASUS", name:"ASUS Laptops", sub:"VivoBook, ROG, TUF Series", order:0 },
+    { icon:"🖥️", badge:"CUSTOM", name:"Assembled PCs", sub:"Gaming & workstation builds", order:1 },
+    { icon:"📱", badge:"ASUS", name:"Smartphones", sub:"Zenfone & ROG Phone series", order:2 },
+    { icon:"🖨️", badge:"HP · EPSON", name:"Printers", sub:"Laser, inkjet, multifunction", order:3 },
+    { icon:"⌨️", badge:"ALL BRANDS", name:"Peripherals", sub:"Keyboards, mice, monitors", order:4 },
+    { icon:"📡", badge:"NETWORKING", name:"Networking Gear", sub:"Routers, switches, cables", order:5 },
+    { icon:"🎮", badge:"GAMING", name:"Gaming Gear", sub:"Headsets, controllers, chairs", order:6 },
+    { icon:"🔋", badge:"ACCESSORIES", name:"Power & UPS", sub:"Inverters, UPS, power banks", order:7 }
+  ];
+}
+
+function renderProductsEditor() {
+  const container = document.getElementById('products-editor');
+  container.innerHTML = localProducts.map((p,i) => `
+    <div class="service-editor-item" data-index="${i}">
+      <div class="service-item-header">
+        <div class="service-item-title">${p.icon||'📦'} ${p.name||'Product '+i}</div>
+        <button class="del-btn" onclick="deleteProduct(${i})">✕ REMOVE</button>
+      </div>
+      <div class="form-grid">
+        <div class="field"><label>Icon (Emoji)</label><input type="text" value="${p.icon||''}" onchange="updateProduct(${i},'icon',this.value)" style="font-size:1.2rem;"></div>
+        <div class="field"><label>Badge Label</label><input type="text" value="${p.badge||''}" onchange="updateProduct(${i},'badge',this.value)" placeholder="ASUS"></div>
+        <div class="field"><label>Product Name</label><input type="text" value="${p.name||''}" onchange="updateProduct(${i},'name',this.value)"></div>
+        <div class="field"><label>Subtitle / Series</label><input type="text" value="${p.sub||''}" onchange="updateProduct(${i},'sub',this.value)"></div>
+        <div class="field full">
+          <label>Product Image (Cloudinary)</label>
+          <div class="img-upload-wrap">
+            <div class="img-preview" id="img-prev-${i}">
+              ${p.image ? `<img src="${p.image}" alt="product">` : '<span class="img-placeholder">🖼️</span>'}
+            </div>
+            <label class="upload-btn" id="upload-btn-${i}">
+              📤 UPLOAD IMAGE
+              <input type="file" accept="image/*" style="display:none" onchange="handleImgUpload(event, ${i})">
+            </label>
+            <div class="upload-progress" id="upload-prog-${i}"></div>
+            ${p.image ? `<div style="font-family:'Share Tech Mono',monospace;font-size:0.48rem;color:rgba(0,245,255,0.35);margin-top:4px;word-break:break-all;">${p.image.slice(-50)}</div>` : ''}
+          </div>
+        </div>
+      </div>
+    </div>`).join('');
+  container.innerHTML += `<div style="margin-top:16px;">
+    <button class="save-btn" onclick="saveProducts()">💾 SAVE ALL PRODUCTS</button>
+  </div>`;
+}
+
+window.handleImgUpload = async function(event, index) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const btn = document.getElementById('upload-btn-' + index);
+  const prog = document.getElementById('upload-prog-' + index);
+  const prev = document.getElementById('img-prev-' + index);
+  if(btn) btn.classList.add('uploading');
+  await uploadToCloudinary(file, prog, prev, index);
+  if(btn) btn.classList.remove('uploading');
+};
+
+window.updateProduct = function(i,k,v){ localProducts[i][k]=v; };
+window.addProduct = function(){
+  localProducts.push({ icon:"🆕", badge:"NEW", name:"New Product", sub:"Product description", order:localProducts.length });
+  renderProductsEditor();
+};
+window.deleteProduct = function(i){
+  if(confirm('Remove this product?')){ localProducts.splice(i,1); renderProductsEditor(); }
+};
+window.saveProducts = async function(){
+  if(!db){ showToast('Firebase not connected',true); return; }
+  try {
+    const productsObj = {};
+    localProducts.forEach((p,i) => {
+      const key = p.id || ('prod_' + i);
+      productsObj[key] = { ...p, order: i, id: undefined };
+    });
+    await set(ref(db, "products"), productsObj);
+    showToast('✓ Products saved!', false, true);
+  } catch(e){ showToast('Save failed: '+e.message,true); }
+};
+
+// ── BRANCHES EDITOR ──
+async function loadBranchesEditor() {
+  if(!db) { localBranches = getDefaultBranches(); renderBranchesEditor(); return; }
+  try {
+    const snap = await get(ref(db, "branches"));
+    if(!snap.exists()) {
+      localBranches = getDefaultBranches();
+    } else {
+      localBranches = [];
+      snap.forEach(child => localBranches.push({ id: child.key, ...child.val() }));
+      localBranches.sort((a,b) => (a.order||0) - (b.order||0));
+    }
+    renderBranchesEditor();
+  } catch(e) { console.warn(e); localBranches = getDefaultBranches(); renderBranchesEditor(); }
+}
+
+function getDefaultBranches() {
+  return [
+    {
+      tag: "HEADQUARTER",
+      name: "Race Computer Services",
+      badge: "RETAIL STORE",
+      isMain: true,
+      address: "1063, Jhalaniyon Ka Rasta, Kishanpole Bazaar, Jaipur - 302001",
+      phone: "+918058016000",
+      whatsapp: "919828012470",
+      email: "race16000@gmail.com",
+      hours: "Mon – Sat: 10:00 AM – 8:00 PM | Sunday: Closed",
+      mapUrl: "https://maps.app.goo.gl/18P5gkiYyAP7uSBr5?g_st=aw",
+      order: 0
+    },
+    {
+      tag: "RETAIL STORE",
+      name: "Race Computer",
+      badge: "Shop no.1",
+      isMain: false,
+      address: "Race Computer, Shop No. 1, Opp Pinjrapole Goushala, Sheopur Rd, Sanganer, Pratap Nagar, Jaipur, Rajasthan 302033",
+      phone: "+918058516000",
+      whatsapp: "918058516000",
+      email: "racecomputerindia@gmail.com",
+      hours: "Mon – Sat: 10:00 AM – 8:00 PM | Month's Last Sunday: Closed",
+      mapUrl: "",
+      order: 1
+    }
+  ];
+}
+
+function renderBranchesEditor() {
+  const container = document.getElementById('branches-editor');
+  if(!container) return;
+  container.innerHTML = localBranches.map((b,i) => `
+    <div class="service-editor-item" data-index="${i}" style="${b.isMain ? 'border-color:rgba(0,245,255,0.4);background:rgba(0,245,255,0.03);' : ''}">
+      <div class="service-item-header">
+        <div class="service-item-title">🏪 ${b.tag || 'BRANCH ' + String(i+1).padStart(2,'0')} ${b.isMain ? '<span style="color:var(--cyan);font-size:0.55rem;margin-left:8px;letter-spacing:2px;">★ MAIN BRANCH</span>' : ''}</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <label style="display:flex;align-items:center;gap:6px;font-family:\'Share Tech Mono\',monospace;font-size:0.52rem;color:rgba(0,245,255,0.6);cursor:pointer;">
+            <input type="checkbox" ${b.isMain ? 'checked' : ''} onchange="setMainBranch(${i}, this.checked)" style="accent-color:var(--cyan);width:14px;height:14px;">
+            MAIN
+          </label>
+          <button class="del-btn" onclick="deleteBranch(${i})">✕ REMOVE</button>
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="field"><label>Branch Tag</label><input type="text" value="${b.tag||''}" onchange="updateBranch(${i},'tag',this.value)" placeholder="BRANCH 01"></div>
+        <div class="field"><label>Display Name</label><input type="text" value="${b.name||''}" onchange="updateBranch(${i},'name',this.value)" placeholder="Sanganer Store"></div>
+        <div class="field"><label>Badge Label</label><input type="text" value="${b.badge||''}" onchange="updateBranch(${i},'badge',this.value)" placeholder="RETAIL STORE"></div>
+        <div class="field"><label>Phone</label><input type="text" value="${b.phone||''}" onchange="updateBranch(${i},'phone',this.value)" placeholder="+91 98765 43210"></div>
+        <div class="field"><label>WhatsApp Number</label><input type="text" value="${b.whatsapp||''}" onchange="updateBranch(${i},'whatsapp',this.value)" placeholder="919876543210"></div>
+        <div class="field"><label>Email</label><input type="text" value="${b.email||''}" onchange="updateBranch(${i},'email',this.value)" placeholder="store@racecomputer.in"></div>
+        <div class="field full"><label>Address</label><textarea onchange="updateBranch(${i},'address',this.value)" rows="2">${b.address||''}</textarea></div>
+        <div class="field full"><label>Working Hours</label><input type="text" value="${b.hours||''}" onchange="updateBranch(${i},'hours',this.value)" placeholder="Mon – Sat: 10:00 AM – 8:00 PM | Sunday: Closed"></div>
+        <div class="field full"><label>Google Maps URL</label><input type="text" value="${b.mapUrl||''}" onchange="updateBranch(${i},'mapUrl',this.value)" placeholder="https://maps.google.com/?q=..."></div>
+      </div>
+    </div>`).join('');
+  container.innerHTML += `<div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
+    <button class="save-btn" onclick="saveBranches()">💾 SAVE ALL BRANCHES</button>
+  </div>`;
+}
+
+window.updateBranch = function(i, key, val) { localBranches[i][key] = val; };
+
+window.setMainBranch = function(i, checked) {
+  // Ek hi main branch ho sakti hai — sab false karo pehle
+  localBranches.forEach((b, idx) => { b.isMain = (idx === i && checked); });
+  renderBranchesEditor();
+};
+
+window.addBranch = function() {
+  localBranches.push({
+    tag: 'BRANCH ' + String(localBranches.length + 1).padStart(2,'0'),
+    name: 'New Branch',
+    badge: 'STORE',
+    isMain: false,
+    address: '', phone: '', whatsapp: '', email: '', hours: '', mapUrl: '',
+    order: localBranches.length
+  });
+  renderBranchesEditor();
+};
+
+window.deleteBranch = function(i) {
+  if(confirm('Remove this branch?')) { localBranches.splice(i,1); renderBranchesEditor(); }
+};
+
+window.saveBranches = async function() {
+  if(!db) { showToast('Firebase not connected', true); return; }
+  try {
+    const branchesObj = {};
+    localBranches.forEach((b, i) => {
+      const key = b.id || ('branch_' + i);
+      branchesObj[key] = { ...b, order: i, id: undefined };
+    });
+    await set(ref(db, "branches"), branchesObj);
+    showToast('✓ Branches saved!', false, true);
+  } catch(e) { showToast('Save failed: ' + e.message, true); }
+};
+
+// ── CLOUDINARY UPLOAD ──
+window.uploadToCloudinary = async function(file, progressEl, previewEl, index) {
+  if (!file) return null;
+  const fd = new FormData();
+  fd.append("file", file);
+  fd.append("upload_preset", CLOUDINARY_CONFIG.uploadPreset);
+  fd.append("folder", "race_computer_products");
+  try {
+    if(progressEl) progressEl.textContent = "> UPLOADING...";
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CONFIG.cloudName}/image/upload`, { method: "POST", body: fd });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+    const url = data.secure_url;
+    if (index !== undefined) {
+      localProducts[index].image = url;
+      if(previewEl) previewEl.innerHTML = `<img src="${url}" alt="product">`;
+    }
+    if(progressEl) progressEl.textContent = "> UPLOAD COMPLETE ✓";
+    showToast("✓ Image uploaded!", false, true);
+    return url;
+  } catch(e) {
+    if(progressEl) progressEl.textContent = "> UPLOAD FAILED: " + e.message;
+    showToast("Upload failed: " + e.message, true);
+    return null;
+  }
+};
+
+// ── TOAST ──
+window.showToast = function(msg, isErr=false, isSuccess=false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (isErr?' error': isSuccess?' success':'') + ' show';
+  setTimeout(()=>t.classList.remove('show'),4000);
+};
+</script>
+
+<script>
+// ── PANEL NAVIGATION ──
+const panelTitles = {
+  dashboard: ['Dashboard', '// OVERVIEW & QUICK STATS'],
+  enquiries: ['Enquiries', '// ALL CUSTOMER ENQUIRIES'],
+  appearance: ['Theme & Effects', '// THEMES · ANIMATIONS · MODE'],
+  hero: ['Hero Section', '// EDIT MAIN PAGE CONTENT'],
+  'contact-info': ['Contact Info', '// PHONE, ADDRESS & HOURS'],
+  services: ['Services', '// ADD · EDIT · REMOVE SERVICES'],
+  products: ['Products', '// MANAGE PRODUCT CAROUSEL'],
+  gallery: ['Gallery / Photos', '// STORE PHOTOS · CLOUDINARY UPLOAD'],
+  branches: ['Branches', '// MANAGE STORE LOCATIONS'],
+};
+
+window.showPanel = function(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  
+  const panel = document.getElementById('panel-' + name);
+  if(panel) panel.classList.add('active');
+  
+  // Only try to activate nav item if called from a sidebar nav click
+  try {
+    if(event && event.currentTarget) event.currentTarget.classList.add('active');
+  } catch(e) {}
+  
+  const titles = panelTitles[name] || [name, ''];
+  document.getElementById('page-title-el').textContent = titles[0];
+  document.getElementById('page-subtitle-el').textContent = titles[1];
+
+  // Load gallery when panel opened
+  if(name === 'gallery') { if(typeof loadGalleryEditor === 'function') loadGalleryEditor(); }
+
+  // Close mobile sidebar
+  const sidebar = document.getElementById('sidebar');
+  if(sidebar) sidebar.classList.remove('open');
+  const backdrop = document.getElementById('sidebar-backdrop');
+  if(backdrop) backdrop.classList.remove('show');
+};
+
+window.toggleSidebar = function() {
+  const sidebar = document.getElementById('sidebar');
+  const backdrop = document.getElementById('sidebar-backdrop');
+  sidebar.classList.toggle('open');
+  if(backdrop) backdrop.classList.toggle('show', sidebar.classList.contains('open'));
+};
+
+// ── MOBILE BOTTOM NAV ──
+window.mobileNavTo = function(panelId, clickedEl) {
+  // Show the panel
+  showPanel(panelId);
+  // Update active state on bottom nav items
+  const knownPanels = {'dashboard':'mbn-dashboard','enquiries':'mbn-enquiries','appearance':'mbn-appearance'};
+  // Remove active from all bottom nav items
+  document.querySelectorAll('#mobile-bottom-nav .mbn-item').forEach(el => el.classList.remove('active'));
+  // Set active on matching bottom nav item
+  const navId = knownPanels[panelId];
+  if(navId) {
+    const el = document.getElementById(navId);
+    if(el) el.classList.add('active');
+  } else {
+    // For other panels (hero, contact, services etc) highlight "more"
+    const moreEl = document.getElementById('mbn-more');
+    if(moreEl) moreEl.classList.add('active');
+  }
+  // Close sidebar if open
+  const sidebar = document.getElementById('sidebar');
+  const backdrop = document.getElementById('sidebar-backdrop');
+  if(sidebar && sidebar.classList.contains('open')) {
+    sidebar.classList.remove('open');
+    if(backdrop) backdrop.classList.remove('show');
+  }
+};
+
+window.toggleMobileMore = function() {
+  const drawer = document.getElementById('mobile-more-drawer');
+  const bdrop = document.getElementById('mobile-more-drawer-backdrop');
+  if(!drawer) return;
+  const isOpen = drawer.classList.contains('open');
+  if(isOpen) {
+    drawer.classList.remove('open');
+    if(bdrop) bdrop.classList.remove('show');
+  } else {
+    drawer.style.display = 'block';
+    requestAnimationFrame(() => drawer.classList.add('open'));
+    if(bdrop) bdrop.classList.add('show');
+  }
+};
+
+window.closeMobileMore = function() {
+  const drawer = document.getElementById('mobile-more-drawer');
+  const bdrop = document.getElementById('mobile-more-drawer-backdrop');
+  if(drawer) drawer.classList.remove('open');
+  if(bdrop) bdrop.classList.remove('show');
+};
+
+// ══ GALLERY EDITOR JS ══
+let localGallery = [];
+
+window.loadGalleryEditor = async function() {
+  const db = window._db, ref = window._ref, get = window._get;
+  if(!db){ renderGalleryEditor([]); return; }
+  try {
+    const snap = await get(ref(db, 'gallery'));
+    localGallery = [];
+    if(snap.exists()) {
+      snap.forEach(child => localGallery.push({ id: child.key, ...child.val() }));
+      localGallery.sort((a,b) => (a.order||0)-(b.order||0));
+    }
+    renderGalleryEditor(localGallery);
+  } catch(e) { console.warn(e); renderGalleryEditor([]); }
+};
+
+function renderGalleryEditor(items) {
+  const container = document.getElementById('gallery-editor');
+  const empty = document.getElementById('gallery-empty');
+  if(!items || items.length === 0) {
+    container.innerHTML = '';
+    if(empty) empty.style.display = 'block';
+    return;
+  }
+  if(empty) empty.style.display = 'none';
+  container.innerHTML = items.map((g,i) => `
+    <div class="gal-editor-card">
+      ${g.url ? `<img class="gal-card-img" src="${g.url}" alt="${g.label||''}">` : '<div class="gal-card-img-placeholder">🖼️</div>'}
+      <div class="gal-card-body">
+        <div class="gal-card-label">${g.label || 'Photo ' + (i+1)}</div>
+        <div class="gal-card-sub">${g.sub || ''}</div>
+        <div class="gal-card-badge-row">
+          ${g.badge ? `<div class="gal-card-badge">${g.badge}</div>` : ''}
+          <div class="gal-card-badge" style="background:rgba(124,58,255,0.1);border-color:rgba(124,58,255,0.3);color:#a78bff;">${g.size==='big'?'BIG':'NORMAL'}</div>
+        </div>
+      </div>
+      <div class="gal-card-actions">
+        <button class="del-btn" onclick="deleteGalleryPhoto('${g.id}')">✕ DELETE</button>
+        <button class="add-btn" style="font-size:0.48rem;padding:5px 10px;" onclick="moveGalleryPhoto(${i}, -1)">↑ UP</button>
+        <button class="add-btn" style="font-size:0.48rem;padding:5px 10px;" onclick="moveGalleryPhoto(${i}, 1)">↓ DOWN</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+window.handleGalleryUpload = async function(event) {
+  const file = event.target.files[0];
+  if(!file) return;
+  const label = document.getElementById('gal-label').value.trim() || 'Store Photo';
+  const sub   = document.getElementById('gal-sub').value.trim();
+  const badge = document.getElementById('gal-badge').value.trim();
+  const size  = document.getElementById('gal-size').value;
+
+  const btn   = document.getElementById('gal-upload-btn');
+  const prog  = document.getElementById('gal-upload-prog');
+  const prev  = document.getElementById('gal-new-preview');
+  if(btn) btn.classList.add('uploading');
+
+  try {
+    prog.textContent = '> UPLOADING TO CLOUDINARY...';
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('upload_preset', 'racecomp');
+    fd.append('folder', 'race_computer_gallery');
+    const res = await fetch(`https://api.cloudinary.com/v1_1/dbxfqh6zz/image/upload`, { method:'POST', body:fd });
+    const data = await res.json();
+    if(data.error) throw new Error(data.error.message);
+    const url = data.secure_url;
+
+    // Preview
+    prev.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover;">`;
+    prog.textContent = '> UPLOAD COMPLETE ✓';
+
+    // Save to Firebase
+    const db = window._db, ref = window._ref;
+    const { push, set } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js");
+    if(!db){ showToast('Firebase not connected — image uploaded but not saved',true); return; }
+    const newRef = push(ref(db, 'gallery'));
+    await set(newRef, { url, label, sub, badge, size, order: localGallery.length, createdAt: Date.now() });
+    showToast('✓ Photo uploaded & saved!', false, true);
+
+    // Reset fields
+    document.getElementById('gal-label').value = '';
+    document.getElementById('gal-sub').value = '';
+    document.getElementById('gal-badge').value = '';
+    document.getElementById('gal-size').value = 'normal';
+    event.target.value = '';
+
+    // Reload gallery
+    loadGalleryEditor();
+  } catch(e) {
+    prog.textContent = '> FAILED: ' + e.message;
+    showToast('Upload failed: ' + e.message, true);
+  }
+  if(btn) btn.classList.remove('uploading');
+};
+
+window.deleteGalleryPhoto = async function(id) {
+  if(!confirm('Is photo ko delete karo?')) return;
+  const db = window._db, ref = window._ref, remove = window._remove;
+  if(!db){ showToast('Firebase not connected',true); return; }
+  try {
+    await remove(ref(db, 'gallery/' + id));
+    showToast('✓ Photo deleted', false, true);
+    loadGalleryEditor();
+  } catch(e) { showToast('Delete failed: ' + e.message, true); }
+};
+
+window.moveGalleryPhoto = async function(index, dir) {
+  const newIndex = index + dir;
+  if(newIndex < 0 || newIndex >= localGallery.length) return;
+  // Swap
+  [localGallery[index], localGallery[newIndex]] = [localGallery[newIndex], localGallery[index]];
+  // Update order in firebase
+  const db = window._db, ref = window._ref;
+  const { update } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js");
+  if(!db){ renderGalleryEditor(localGallery); return; }
+  try {
+    const updates = {};
+    localGallery.forEach((g,i) => { if(g.id) updates[`gallery/${g.id}/order`] = i; });
+    await update(ref(db, '/'), updates);
+    renderGalleryEditor(localGallery);
+    showToast('✓ Order updated', false, true);
+  } catch(e) { showToast('Reorder failed: '+e.message, true); }
+};
+
+function syncMobileEnqBadge() {
+  const mainBadge = document.getElementById('new-badge');
+  const mbnBadge = document.getElementById('mbn-enq-badge');
+  if(!mainBadge || !mbnBadge) return;
+  const count = mainBadge.textContent;
+  if(count && count !== '0' && mainBadge.style.display !== 'none') {
+    mbnBadge.classList.add('show');
+  } else {
+    mbnBadge.classList.remove('show');
+  }
+}
+// Observe badge changes
+const _badgeObs = new MutationObserver(syncMobileEnqBadge);
+document.addEventListener('DOMContentLoaded', () => {
+  const b = document.getElementById('new-badge');
+  if(b) _badgeObs.observe(b, {attributes:true, childList:true, subtree:true});
+});
+
+// Also handle resize - show/hide bottom nav
+window.addEventListener('resize', () => {
+  const mbn = document.getElementById('mobile-bottom-nav');
+  const appEl = document.getElementById('app');
+  if(!mbn || !appEl) return;
+  const isMobile = window.matchMedia('(max-width:768px)').matches;
+  const isLoggedIn = appEl.style.display !== 'none' && !document.getElementById('login-screen').classList.contains('hidden') === false;
+  if(isMobile && isLoggedIn) {
+    mbn.style.display = 'flex';
+  } else if(!isMobile) {
+    mbn.style.display = 'none';
+    if(appEl.getAttribute('style') !== 'display: none;') {
+      appEl.style.display = 'flex';
+    }
+  }
+});
+
+// Close sidebar on outside click (mobile) - handled by backdrop div onclick
+
+// Enter key for login
+document.getElementById('login-pass')?.addEventListener('keydown', e => {
+  if(e.key === 'Enter') window.doLogin?.();
+});
+</script>
+
+<script>
+// ══════════════════════════════════════════════
+//  MASTER ADMIN — SECRET CONTROL CENTER
+// ══════════════════════════════════════════════
+
+// Master password stored as SHA-256 hash only — never store plain text here
+// To regenerate: run hashPassword("yourNewPassword") in console and paste result below
+const MASTER_PASS_HASH = "2d5b7e73f31c84e8854c8260ac4f452ba943ca847491c7582952e5061fdd9c09";
+
+// Authorized Google email for master access
+const MASTER_EMAIL = "manmohansharma002008@gmail.com";
+window.MASTER_EMAIL = MASTER_EMAIL; // expose globally for module scripts
+
+// Hash function for password verification
+async function hashPassword(password) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password + "RC_SALT_2024_SECURE");
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Rate limiter for login attempts
+const masterLoginAttempts = { count: 0, lastAttempt: 0, locked: false };
+function checkRateLimit() {
+  const now = Date.now();
+  if (masterLoginAttempts.locked) {
+    const remaining = Math.ceil((masterLoginAttempts.lockedUntil - now) / 1000);
+    if (now < masterLoginAttempts.lockedUntil) {
+      return { allowed: false, message: `Too many attempts. Wait ${remaining}s.` };
+    } else {
+      masterLoginAttempts.locked = false;
+      masterLoginAttempts.count = 0;
+    }
+  }
+  if (now - masterLoginAttempts.lastAttempt > 300000) masterLoginAttempts.count = 0;
+  masterLoginAttempts.lastAttempt = now;
+  masterLoginAttempts.count++;
+  if (masterLoginAttempts.count > 5) {
+    masterLoginAttempts.locked = true;
+    masterLoginAttempts.lockedUntil = now + 300000; // 5 min lockout
+    return { allowed: false, message: 'Too many attempts. Locked for 5 minutes.' };
+  }
+  return { allowed: true };
+}
+
+// Feature list that can be locked/unlocked
+const FEATURES = [
+  { key: 'theme',    label: '🎨 Theme & Colors' },
+  { key: 'hero',     label: '🏠 Hero Section' },
+  { key: 'contact',  label: '📞 Contact Info' },
+  { key: 'services', label: '⚙️ Services Editor' },
+  { key: 'products', label: '📦 Products Editor' },
+];
+
+// In-memory lock state (persisted to localStorage)
+let featureLocks = JSON.parse(localStorage.getItem('featureLocks') || '{}');
+
+let masterStep = 0;
+
+// Save feature locks to localStorage
+function saveFeatureLocks() {
+  localStorage.setItem('featureLocks', JSON.stringify(featureLocks));
+}
+
+// Check if a feature is locked (called before allowing edits)
+window.isFeatureLocked = function(featureKey) {
+  return featureLocks[featureKey] === true;
+};
+
+// Wrap save buttons with lock check
+function wrapWithLockCheck(originalFn, featureKey) {
+  return function() {
+    if (isFeatureLocked(featureKey)) {
+      showLockedMessage(featureKey);
+      return;
+    }
+    originalFn.apply(this, arguments);
+  };
+}
+
+function showLockedMessage(featureKey) {
+  const feat = FEATURES.find(f => f.key === featureKey);
+  const label = feat ? feat.label : featureKey;
+  // Show a big overlay message
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.88);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(10px);';
+  overlay.innerHTML = `
+    <div style="background:rgba(0,10,25,0.98);border:1px solid rgba(255,68,85,0.4);padding:40px;width:min(90vw,400px);text-align:center;position:relative;">
+      <div style="position:absolute;top:0;left:20%;right:20%;height:2px;background:linear-gradient(90deg,transparent,#ff4455,transparent);"></div>
+      <div style="font-size:2.5rem;margin-bottom:16px;">🔒</div>
+      <div style="font-family:'Orbitron',monospace;font-size:0.9rem;font-weight:700;color:#ff4455;letter-spacing:2px;margin-bottom:8px;">FEATURE LOCKED</div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:rgba(200,240,255,0.5);letter-spacing:1px;margin-bottom:6px;">${label}</div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:rgba(200,240,255,0.8);margin:18px 0;letter-spacing:1px;line-height:1.8;">This feature is locked.<br>To use this feature,<br><span style="color:#00f5ff;font-size:0.75rem;">ask AQERIONX</span></div>
+      <button onclick="this.closest('[style]').remove()" style="padding:10px 24px;background:rgba(255,68,85,0.1);border:1px solid rgba(255,68,85,0.3);color:#ff4455;font-family:'Share Tech Mono',monospace;font-size:0.55rem;letter-spacing:2px;cursor:pointer;">✕ CLOSE</button>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+// Patch existing save functions to check locks
+(function patchSaveFunctions() {
+  const origSaveTheme = window.saveTheme;
+  window.saveTheme = function() {
+    if(isFeatureLocked('theme')) { showLockedMessage('theme'); return; }
+    origSaveTheme && origSaveTheme.apply(this, arguments);
+  };
+  const origResetTheme = window.resetTheme;
+  window.resetTheme = function() {
+    if(isFeatureLocked('theme')) { showLockedMessage('theme'); return; }
+    origResetTheme && origResetTheme.apply(this, arguments);
+  };
+  const origSaveHero = window.saveHero;
+  window.saveHero = function() {
+    if(isFeatureLocked('hero')) { showLockedMessage('hero'); return; }
+    origSaveHero && origSaveHero.apply(this, arguments);
+  };
+  const origSaveContact = window.saveContact;
+  window.saveContact = function() {
+    if(isFeatureLocked('contact')) { showLockedMessage('contact'); return; }
+    origSaveContact && origSaveContact.apply(this, arguments);
+  };
+  const origSaveServices = window.saveServices;
+  window.saveServices = function() {
+    if(isFeatureLocked('services')) { showLockedMessage('services'); return; }
+    origSaveServices && origSaveServices.apply(this, arguments);
+  };
+  const origSaveProducts = window.saveProducts;
+  window.saveProducts = function() {
+    if(isFeatureLocked('products')) { showLockedMessage('products'); return; }
+    origSaveProducts && origSaveProducts.apply(this, arguments);
+  };
+})();
+
+// ── OPEN MASTER OVERLAY ──
+window.triggerMasterAdmin = function() {
+  const overlay = document.getElementById('master-overlay');
+  overlay.style.display = 'flex';
+  // Animation reset — remove & re-add class
+  const s1 = document.getElementById('master-step1');
+  s1.classList.remove('master-panel-anim');
+  void s1.offsetWidth; // reflow force
+  s1.classList.add('master-panel-anim');
+  s1.style.display = 'block';
+  document.getElementById('master-step2').style.display = 'none';
+  document.getElementById('master-step3').style.display = 'none';
+  document.getElementById('master-pass-input').value = '';
+  document.getElementById('master-err1').textContent = '';
+  masterStep = 1;
+  setTimeout(() => document.getElementById('master-pass-input').focus(), 100);
+};
+
+window.closeMasterOverlay = function() {
+  document.getElementById('master-overlay').style.display = 'none';
+  masterStep = 0;
+};
+
+// ── STEP 1: Verify Master Password (hash-based, rate-limited) ──
+window.verifyMasterPass = async function() {
+  const pass = document.getElementById('master-pass-input').value;
+  const err = document.getElementById('master-err1');
+
+  // Rate limit check
+  const rl = checkRateLimit();
+  if (!rl.allowed) {
+    err.textContent = '✕ ' + rl.message;
+    document.getElementById('master-pass-input').value = '';
+    return;
+  }
+
+  // Hash the entered password and compare against stored hash
+  const enteredHash = await hashPassword(pass);
+  if (enteredHash === MASTER_PASS_HASH) {
+    masterLoginAttempts.count = 0;
+    err.textContent = '';
+    document.getElementById('master-step1').style.display = 'none';
+    document.getElementById('master-step2').style.display = 'block';
+    masterStep = 2;
+  } else {
+    err.textContent = '✕ Invalid master password';
+    document.getElementById('master-pass-input').value = '';
+    document.getElementById('master-pass-input').focus();
+  }
+};
+
+// ── STEP 2: Google Verify ──
+window.masterGoogleVerify = async function() {
+  const err = document.getElementById('master-err2');
+  err.textContent = 'Verifying...';
+  try {
+    const { getAuth, signInWithPopup, GoogleAuthProvider } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js");
+    const auth = getAuth();
+    const provider = new GoogleAuthProvider();
+    const result = await signInWithPopup(auth, provider);
+    const email = result.user.email;
+    if (email === MASTER_EMAIL) {
+      err.textContent = '';
+      document.getElementById('master-step2').style.display = 'none';
+      openMasterControlPanel();
+      masterStep = 3;
+    } else {
+      err.textContent = '✕ Unauthorized Google account: ' + email;
+    }
+  } catch(e) {
+    const msgs = {
+      'auth/popup-closed-by-user': 'Popup closed. Try again.',
+      'auth/cancelled-popup-request': 'Cancelled.',
+      'auth/unauthorized-domain': 'Domain not authorized in Firebase.',
+    };
+    err.textContent = msgs[e.code] || 'Google verify failed: ' + e.message;
+  }
+};
+
+// ── OPEN MASTER CONTROL PANEL ──
+function openMasterControlPanel() {
+  const s3 = document.getElementById('master-step3');
+  s3.classList.remove('master-panel-anim');
+  void s3.offsetWidth;
+  s3.classList.add('master-panel-anim');
+  s3.style.display = 'block';
+
+  // Load current Firebase config values into fields (from saved config only)
+  const fb = {
+    apiKey: "",
+    authDomain: "",
+    dburl: "",
+    projectId: "",
+    appId: "",
+    msgId: ""
+  };
+  const saved = JSON.parse(localStorage.getItem('masterFirebaseConfig') || '{}');
+  // Only show saved/custom values; do not pre-fill with live keys in UI
+  document.getElementById('mc-fb-apikey').value = saved.apiKey ? '••••••••••••••••••••' + saved.apiKey.slice(-4) : '';
+  document.getElementById('mc-fb-apikey').dataset.realVal = saved.apiKey || fb.apiKey;
+  document.getElementById('mc-fb-authdomain').value = saved.authDomain || fb.authDomain;
+  document.getElementById('mc-fb-dburl').value = saved.dburl || fb.dburl;
+  document.getElementById('mc-fb-projectid').value = saved.projectId || fb.projectId;
+  document.getElementById('mc-fb-appid').value = saved.appId ? '••••:' + saved.appId.split(':').slice(-1) : fb.appId.split(':').slice(0,1)[0] + ':••••:web:••••';
+  document.getElementById('mc-fb-appid').dataset.realVal = saved.appId || fb.appId;
+  document.getElementById('mc-fb-msgid').value = saved.msgId || fb.msgId;
+
+  // Load cloudinary
+  const cl = JSON.parse(localStorage.getItem('masterCloudinaryConfig') || '{}');
+  document.getElementById('mc-cl-name').value = cl.cloudName || '';
+  document.getElementById('mc-cl-preset').value = cl.uploadPreset || '';
+
+  // Render feature locks
+  renderFeatureLockList();
+
+  // Load sub-admin list
+  loadAdminList();
+}
+
+function renderFeatureLockList() {
+  const list = document.getElementById('feature-lock-list');
+  list.innerHTML = FEATURES.map(f => {
+    const locked = featureLocks[f.key] === true;
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(0,245,255,0.02);border:1px solid rgba(0,245,255,0.08);">
+      <span style="font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:rgba(200,240,255,0.7);letter-spacing:1px;">${f.label}</span>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-family:'Share Tech Mono',monospace;font-size:0.5rem;color:${locked ? '#ff4455' : '#00ff88'};letter-spacing:1px;">${locked ? '🔒 LOCKED' : '🔓 OPEN'}</span>
+        <button onclick="toggleFeatureLock('${f.key}')"
+          style="padding:5px 14px;border:1px solid ${locked ? 'rgba(0,255,136,0.3)' : 'rgba(255,68,85,0.3)'};
+          background:${locked ? 'rgba(0,255,136,0.06)' : 'rgba(255,68,85,0.06)'};
+          color:${locked ? '#00ff88' : '#ff4455'};
+          font-family:'Share Tech Mono',monospace;font-size:0.5rem;letter-spacing:1px;cursor:pointer;">
+          ${locked ? 'UNLOCK' : 'LOCK'}
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.toggleFeatureLock = function(key) {
+  featureLocks[key] = !featureLocks[key];
+  saveFeatureLocks();
+  renderFeatureLockList();
+  window.showToast(featureLocks[key] ? `🔒 ${key} locked` : `🔓 ${key} unlocked`, false, !featureLocks[key]);
+};
+
+// ── SAVE FIREBASE CONFIG ──
+window.saveMasterFirebase = function() {
+  const config = {
+    apiKey: document.getElementById('mc-fb-apikey').value.trim(),
+    authDomain: document.getElementById('mc-fb-authdomain').value.trim(),
+    dburl: document.getElementById('mc-fb-dburl').value.trim(),
+    projectId: document.getElementById('mc-fb-projectid').value.trim(),
+    appId: document.getElementById('mc-fb-appid').value.trim(),
+    msgId: document.getElementById('mc-fb-msgid').value.trim(),
+  };
+  localStorage.setItem('masterFirebaseConfig', JSON.stringify(config));
+  window.showToast('✓ Firebase config saved! Reload page to apply.', false, true);
+};
+
+// ── SAVE CLOUDINARY CONFIG ──
+window.saveMasterCloudinary = function() {
+  const config = {
+    cloudName: document.getElementById('mc-cl-name').value.trim(),
+    uploadPreset: document.getElementById('mc-cl-preset').value.trim(),
+  };
+  localStorage.setItem('masterCloudinaryConfig', JSON.stringify(config));
+  // Also patch the live CLOUDINARY_CONFIG if accessible
+  if(typeof CLOUDINARY_CONFIG !== 'undefined') {
+    CLOUDINARY_CONFIG.cloudName = config.cloudName;
+    CLOUDINARY_CONFIG.uploadPreset = config.uploadPreset;
+  }
+  window.showToast('✓ Cloudinary config saved & applied!', false, true);
+};
+
+// ══════════════════════════════════════════════
+//  SUB-ADMIN MANAGEMENT — Master can add/remove
+// ══════════════════════════════════════════════
+
+// Load admin list from Firebase and render
+async function loadAdminList() {
+  const wrap = document.getElementById('admin-list-wrap');
+  if(!wrap) return;
+  const _db = window._db, _ref = window._ref, _get = window._get;
+  if(!_db) { wrap.innerHTML = '<div style="font-family:\'Share Tech Mono\',monospace;font-size:0.52rem;color:rgba(255,136,0,0.5);letter-spacing:1px;">Firebase not connected</div>'; return; }
+  try {
+    const snap = await _get(_ref(_db, "admins"));
+    const admins = snap.exists() ? snap.val() : {};
+    renderAdminList(admins);
+  } catch(e) {
+    wrap.innerHTML = '<div style="font-family:\'Share Tech Mono\',monospace;font-size:0.52rem;color:rgba(255,68,85,0.5);">Load failed: ' + e.message + '</div>';
+  }
+}
+
+function renderAdminList(admins) {
+  const wrap = document.getElementById('admin-list-wrap');
+  if(!wrap) return;
+  const entries = Object.entries(admins || {});
+  if(entries.length === 0) {
+    wrap.innerHTML = '<div style="font-family:\'Share Tech Mono\',monospace;font-size:0.5rem;color:rgba(0,255,136,0.25);letter-spacing:1px;padding:8px 0;">No sub-admins added yet</div>';
+    return;
+  }
+  wrap.innerHTML = entries.map(([key, val]) => {
+    const email = val.email || key.replace(/_dot_/g,'.').replace(/_at_/g,'@');
+    const isMaster = val.role === 'master';
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:rgba(0,255,136,0.03);border:1px solid rgba(0,255,136,0.1);">
+      <div>
+        <span style="font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:rgba(200,240,255,0.8);letter-spacing:0.5px;">${email}</span>
+        ${isMaster ? '<span style="font-family:\'Share Tech Mono\',monospace;font-size:0.4rem;color:#7b2fff;letter-spacing:2px;margin-left:8px;padding:1px 6px;border:1px solid rgba(123,47,255,0.4);">MASTER</span>' : '<span style="font-family:\'Share Tech Mono\',monospace;font-size:0.4rem;color:#00ff88;letter-spacing:2px;margin-left:8px;padding:1px 6px;border:1px solid rgba(0,255,136,0.3);">ADMIN</span>'}
+      </div>
+      ${!isMaster ? `<button onclick="removeSubAdmin('${key}','${email}')"
+        style="padding:4px 10px;background:rgba(255,68,85,0.07);border:1px solid rgba(255,68,85,0.25);color:#ff4455;font-family:'Share Tech Mono',monospace;font-size:0.45rem;letter-spacing:1px;cursor:pointer;">✕ REMOVE</button>` : ''}
+    </div>`;
+  }).join('');
+}
+
+window.addSubAdmin = async function() {
+  const emailInput = document.getElementById('new-admin-email');
+  const email = emailInput ? emailInput.value.trim().toLowerCase() : '';
+  if(!email || !email.includes('@')) { window.showToast('Valid email enter karein', true); return; }
+  const _db = window._db, _ref = window._ref, _set = window._set;
+  if(!_db) { window.showToast('Firebase not connected', true); return; }
+  const key = email.replace(/\./g,'_dot_').replace(/@/g,'_at_');
+  try {
+    await _set(_ref(_db, 'admins/' + key), { email: email, role: 'admin', addedAt: Date.now() });
+    window.showToast('✓ Admin added: ' + email, false, true);
+    if(emailInput) emailInput.value = '';
+    loadAdminList();
+  } catch(e) { window.showToast('Failed: ' + e.message, true); }
+};
+
+window.removeSubAdmin = async function(key, email) {
+  if(!confirm('Remove admin: ' + email + '?')) return;
+  const _db = window._db, _ref = window._ref, _remove = window._remove;
+  if(!_db) { window.showToast('Firebase not connected', true); return; }
+  try {
+    await _remove(_ref(_db, 'admins/' + key));
+    window.showToast('✓ Admin removed: ' + email, false, true);
+    loadAdminList();
+  } catch(e) { window.showToast('Failed: ' + e.message, true); }
+};
+
+// ── AUTO-LOAD SAVED CONFIGS ON PAGE LOAD ──
+(function applyStoredConfigs() {
+  const cl = JSON.parse(localStorage.getItem('masterCloudinaryConfig') || '{}');
+  if (cl.cloudName && typeof CLOUDINARY_CONFIG !== 'undefined') {
+    CLOUDINARY_CONFIG.cloudName = cl.cloudName;
+    CLOUDINARY_CONFIG.uploadPreset = cl.uploadPreset;
+  }
+})();
+
+// Master access: keyboard shortcut Ctrl+Shift+M (desktop)
+(function() {
+  document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey && e.shiftKey && e.key === 'M') {
+      triggerMasterAdmin();
+    }
+  });
+})();
+
+// ══════════════════════════════════════════════════════
+// MASTER ADMIN TRIGGER
+// Login screen pe Aqerionx logo ko 7 baar tap karo
+// Desktop: Ctrl+Shift+M
+// ══════════════════════════════════════════════════════
+(function() {
+  var taps = 0;
+  var timer = null;
+  var WINDOW_MS = 5000;
+
+  function tryAttach() {
+    var tag = document.getElementById('aqerionx-tag');
+    if (!tag) { setTimeout(tryAttach, 200); return; }
+    var img = document.getElementById('aqerionx-img');
+    var ripple = document.getElementById('aqerionx-ripple');
+
+    function onTap(e) {
+      e.stopPropagation();
+      taps++;
+      if (timer) clearTimeout(timer);
+
+      // Progressive feedback — text brightness increases
+      var progress = taps / 7;
+      if (img) {
+        img.style.opacity = 0.45 + progress * 0.55;
+        img.style.textShadow = '0 0 ' + Math.round(progress * 20) + 'px rgba(123,47,255,0.9)';
+      }
+      // Ripple effect
+      if (ripple) {
+        ripple.style.opacity = '1';
+        ripple.style.animation = 'aqRipple 0.4s ease-out forwards';
+        setTimeout(function(){ ripple.style.animation = ''; ripple.style.opacity = '0'; }, 400);
+      }
+
+      if (taps >= 7) {
+        taps = 0;
+        clearTimeout(timer);
+        // Reset logo
+        if (img) { img.style.opacity = '0.45'; img.style.textShadow = ''; }
+        triggerMasterAdmin();
+      } else {
+        timer = setTimeout(function() {
+          taps = 0;
+          if (img) { img.style.opacity = '0.45'; img.style.textShadow = ''; }
+        }, WINDOW_MS);
+      }
+    }
+
+    tag.addEventListener('touchstart', onTap, { passive: false });
+    tag.addEventListener('click', onTap);
+  }
+  tryAttach();
+})();
+
+// ══════════════════════════════════════════════════════
+// RACE COLOUR ENGINE — Same as website, live colour shift
+// ══════════════════════════════════════════════════════
+(function raceAdminColourEngine() {
+  const root = document.documentElement;
+  const stops = [
+    { h:195, s:100, l:55 },  // electric cyan
+    { h:222, s:100, l:52 },  // vivid blue
+    { h:245, s:100, l:58 },  // indigo
+    { h:265, s:100, l:56 },  // violet/purple
+    { h:195, s:100, l:55 },  // back
+  ];
+  let t = 0;
+  function lerp(a,b,x){return a+(b-a)*x;}
+  function lerpStop(arr, t){
+    const n=arr.length-1;
+    const seg=Math.floor(t*n);
+    const frac=(t*n)-seg;
+    const a=arr[Math.min(seg,n-1)];
+    const b=arr[Math.min(seg+1,n)];
+    return {h:Math.round(lerp(a.h,b.h,frac)),s:Math.round(lerp(a.s,b.s,frac)),l:Math.round(lerp(a.l,b.l,frac))};
+  }
+  function tick(){
+    t=(t+0.0006)%1;
+    const c=lerpStop(stops,t);
+    const bl={h:c.h,s:c.s,l:Math.round(c.l*0.76)};
+    const p={h:(c.h+62)%360,s:85,l:54};
+    root.style.setProperty('--cyan',`hsl(${c.h},${c.s}%,${c.l}%)`);
+    root.style.setProperty('--blue',`hsl(${bl.h},${bl.s}%,${bl.l}%)`);
+    root.style.setProperty('--purple',`hsl(${p.h},${p.s}%,${p.l}%)`);
+    root.style.setProperty('--race-hue',`${c.h}deg`);
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+})();
+
+// ══════════════════════════════════════════════════════
+// ADMIN BG CANVAS — Premium animated particle circuit
+// ══════════════════════════════════════════════════════
+(function adminBgCanvas() {
+  const canvas = document.getElementById('admin-bg-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let W, H, particles = [], nodes = [], t = 0;
+
+  function resize() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+    initScene();
+  }
+
+  function initScene() {
+    // Floating particles
+    particles = Array.from({length: 60}, () => ({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      vx: (Math.random() - 0.5) * 0.4,
+      vy: (Math.random() - 0.5) * 0.4,
+      r: Math.random() * 1.5 + 0.3,
+      o: Math.random(),
+      to: Math.random(),
+      speed: 0.005 + Math.random() * 0.01,
+    }));
+    // Grid nodes (circuit-style)
+    nodes = [];
+    const cols = Math.ceil(W / 80) + 1;
+    const rows = Math.ceil(H / 80) + 1;
+    for (let c = 0; c < cols; c++) {
+      for (let r = 0; r < rows; r++) {
+        nodes.push({
+          x: c * 80 + Math.random() * 30 - 15,
+          y: r * 80 + Math.random() * 30 - 15,
+          pulse: Math.random() * Math.PI * 2,
+          active: Math.random() > 0.65,
+        });
+      }
+    }
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    t += 0.008;
+
+    // Get current cyan from CSS variable
+    const style = getComputedStyle(document.documentElement);
+    const rawCyan = style.getPropertyValue('--cyan').trim() || 'hsl(195,100%,55%)';
+
+    // Draw connecting lines between nearby nodes
+    for (let i = 0; i < nodes.length; i++) {
+      if (!nodes[i].active) continue;
+      for (let j = i + 1; j < nodes.length; j++) {
+        if (!nodes[j].active) continue;
+        const dx = nodes[j].x - nodes[i].x;
+        const dy = nodes[j].y - nodes[i].y;
+        const dist = Math.sqrt(dx*dx+dy*dy);
+        if (dist < 110) {
+          const pulse = Math.abs(Math.sin(t * 0.8 + nodes[i].pulse));
+          ctx.beginPath();
+          ctx.moveTo(nodes[i].x, nodes[i].y);
+          ctx.lineTo(nodes[j].x, nodes[j].y);
+          ctx.strokeStyle = `hsla(195,100%,65%,${0.06 * pulse * (1 - dist/110)})`;
+          ctx.lineWidth = 0.6;
+          ctx.stroke();
+        }
+      }
+    }
+
+    // Draw node dots
+    nodes.forEach(n => {
+      if (!n.active) return;
+      const pulse = Math.abs(Math.sin(t * 1.2 + n.pulse));
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, 1.5 * pulse + 0.5, 0, Math.PI * 2);
+      ctx.fillStyle = `hsla(195,100%,65%,${0.25 * pulse})`;
+      ctx.fill();
+    });
+
+    // Moving particles
+    particles.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      if (p.x < 0) p.x = W;
+      if (p.x > W) p.x = 0;
+      if (p.y < 0) p.y = H;
+      if (p.y > H) p.y = 0;
+      p.o += (p.to - p.o) * p.speed;
+      if (Math.abs(p.o - p.to) < 0.01) p.to = Math.random();
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `hsla(195,100%,70%,${p.o * 0.5})`;
+      ctx.fill();
+    });
+
+    // Radial glow corners
+    const grd = ctx.createRadialGradient(0, 0, 0, 0, 0, W * 0.5);
+    grd.addColorStop(0, `hsla(222,100%,52%,0.03)`);
+    grd.addColorStop(1, 'transparent');
+    ctx.fillStyle = grd;
+    ctx.fillRect(0, 0, W, H);
+
+    requestAnimationFrame(draw);
+  }
+
+  window.addEventListener('resize', resize);
+  resize();
+  draw();
+})();
+</script>
+</body>
+</html>
