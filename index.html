@@ -13,18 +13,30 @@
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
 :root{
-  --cyan:#0061ff;--blue:#0040cc;--purple:#7c3aed;
-  --dark:#f0f4ff;--darker:#eaedfc;
-  --glass:rgba(0,97,255,0.04);--glass-border:rgba(0,97,255,0.13);
-  --green:#00a854;--red:#e53935;--orange:#f57c00;
+  --cyan:#00f5ff;--blue:#0080ff;--purple:#7b2fff;
+  --dark:#020810;--darker:#010508;
+  --glass:rgba(0,200,255,0.05);--glass-border:rgba(0,245,255,0.12);
+  --green:#00ff88;--red:#ff4455;--orange:#ff8800;
   --sidebar:240px;
-  --race-hue: 220deg;
-  /* Admin panel light surface colors */
-  --admin-surface: rgba(255,255,255,0.97);
-  --admin-surface2: rgba(240,244,255,0.95);
-  --admin-border: rgba(0,97,255,0.1);
-  --admin-text: #1a2340;
-  --admin-text-dim: rgba(60,80,140,0.5);
+  --race-hue: 195deg;
+  /* Admin panel clean surface colors */
+  --admin-surface: rgba(4,12,28,0.96);
+  --admin-surface2: rgba(0,16,36,0.9);
+  --admin-border: rgba(0,200,255,0.1);
+  --admin-text: #c8e8f8;
+  --admin-text-dim: rgba(160,210,240,0.45);
+
+  /* ── ADMIN PANEL MODE (overridden by JS) ── */
+  --abg: #010508;
+  --abg2: #020810;
+  --acard: rgba(2,10,24,0.85);
+  --acard-border: rgba(0,245,255,0.12);
+  --atext: #e0f7fa;
+  --atext2: rgba(200,240,255,0.55);
+  --asidebar: rgba(1,4,12,0.97);
+  --aheader: rgba(2,8,20,0.85);
+  --ainput-bg: rgba(0,245,255,0.03);
+  --aselect-bg: #020810;
 }
 
 /* ══ RACE COLOUR SHIFT — background bar like the website ══ */
@@ -57,7 +69,7 @@ body::before {
   height: 100%;
   z-index: 0;
   pointer-events: none;
-  opacity: 0.12;
+  opacity: 0.55;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
 
@@ -81,13 +93,13 @@ body::before {
   0%   { transform:scale(0.8); opacity:0.6; }
   100% { transform:scale(1.4); opacity:0; }
 }
-html,body{height:100%;background:var(--darker);color:var(--admin-text);font-family:'Exo 2',sans-serif;overflow-x:hidden;}
+html,body{height:100%;background:var(--abg);color:var(--atext);font-family:'Exo 2',sans-serif;overflow-x:hidden;transition:background 0.4s,color 0.4s;}
 
 /* ══ LOGIN SCREEN ══ */
-#login-screen{position:fixed;inset:0;z-index:9999;background:rgba(234,237,252,0.92);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;}
+#login-screen{position:fixed;inset:0;z-index:9999;background:rgba(0,5,16,0.85);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;}
 #login-screen.hidden{display:none;}
-.login-box{background:rgba(255,255,255,0.97);border:1px solid var(--glass-border);padding:40px;width:min(90vw,360px);backdrop-filter:blur(20px);position:relative;overflow:visible;box-shadow:0 8px 48px rgba(0,97,255,0.1);}
-.login-box::before{content:'';position:absolute;top:0;left:20%;right:20%;height:2px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);}
+.login-box{background:rgba(0,20,40,0.9);border:1px solid var(--glass-border);padding:40px;width:min(90vw,360px);backdrop-filter:blur(20px);position:relative;overflow:visible;}
+.login-box::before{content:'';position:absolute;top:0;left:20%;right:20%;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);}
 .login-logo{
   font-family:'Orbitron',monospace;font-size:1.5rem;font-weight:900;
   letter-spacing:3px;text-align:center;margin-bottom:6px;
@@ -99,19 +111,19 @@ html,body{height:100%;background:var(--darker);color:var(--admin-text);font-fami
   white-space:nowrap;
 }
 .login-logo span{-webkit-text-fill-color:rgba(255,255,255,0.9);}
-.login-sub{font-family:'Share Tech Mono',monospace;font-size:0.55rem;color:rgba(0,97,255,0.4);letter-spacing:4px;text-align:center;margin-bottom:28px;}
+.login-sub{font-family:'Share Tech Mono',monospace;font-size:0.55rem;color:rgba(0,245,255,0.4);letter-spacing:4px;text-align:center;margin-bottom:28px;}
 .login-field{margin-bottom:14px;}
-.login-field label{font-family:'Share Tech Mono',monospace;font-size:0.56rem;color:rgba(0,97,255,0.6);letter-spacing:2px;display:block;margin-bottom:7px;}
-.login-field input{width:100%;background:rgba(0,97,255,0.03);border:1px solid var(--glass-border);color:var(--admin-text);padding:11px 14px;font-family:'Exo 2',sans-serif;font-size:0.9rem;outline:none;transition:border-color 0.3s;}
-.login-field input:focus{border-color:rgba(0,97,255,0.45);}
+.login-field label{font-family:'Share Tech Mono',monospace;font-size:0.56rem;color:rgba(0,245,255,0.5);letter-spacing:2px;display:block;margin-bottom:7px;}
+.login-field input{width:100%;background:rgba(0,245,255,0.03);border:1px solid var(--glass-border);color:#e0f7fa;padding:11px 14px;font-family:'Exo 2',sans-serif;font-size:0.9rem;outline:none;transition:border-color 0.3s;}
+.login-field input:focus{border-color:rgba(0,245,255,0.45);}
 .login-btn{width:100%;padding:12px;background:linear-gradient(135deg,var(--cyan),var(--blue));color:#000;font-family:'Orbitron',monospace;font-size:0.65rem;font-weight:700;letter-spacing:3px;border:none;cursor:pointer;margin-top:8px;clip-path:polygon(7px 0,100% 0,calc(100% - 7px) 100%,0 100%);transition:all 0.3s;}
 .login-btn:hover{box-shadow:0 0 30px rgba(0,245,255,0.4);}
 .login-err{color:var(--red);font-family:'Share Tech Mono',monospace;font-size:0.55rem;margin-top:10px;text-align:center;letter-spacing:1px;min-height:16px;}
 .login-divider{display:flex;align-items:center;gap:12px;margin:14px 0 10px;}
 .login-divider::before,.login-divider::after{content:'';flex:1;height:1px;background:var(--glass-border);}
-.login-divider span{font-family:'Share Tech Mono',monospace;font-size:0.5rem;color:rgba(0,97,255,0.25);letter-spacing:2px;}
-.google-btn{width:100%;padding:11px;background:rgba(0,97,255,0.03);border:1px solid rgba(0,97,255,0.15);color:var(--admin-text);font-family:'Share Tech Mono',monospace;font-size:0.58rem;letter-spacing:2px;cursor:pointer;transition:all 0.3s;display:flex;align-items:center;justify-content:center;gap:10px;}
-.google-btn:hover{background:rgba(0,97,255,0.07);border-color:rgba(0,97,255,0.3);}
+.login-divider span{font-family:'Share Tech Mono',monospace;font-size:0.5rem;color:rgba(0,245,255,0.25);letter-spacing:2px;}
+.google-btn{width:100%;padding:11px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);color:#e0f7fa;font-family:'Share Tech Mono',monospace;font-size:0.58rem;letter-spacing:2px;cursor:pointer;transition:all 0.3s;display:flex;align-items:center;justify-content:center;gap:10px;}
+.google-btn:hover{background:rgba(255,255,255,0.09);border-color:rgba(255,255,255,0.25);}
 .google-btn svg{width:16px;height:16px;flex-shrink:0;}
 
 /* ══ LAYOUT ══ */
@@ -129,51 +141,52 @@ html,body{height:100%;background:var(--darker);color:var(--admin-text);font-fami
   white-space:nowrap;
 }
 .sidebar-logo-text span{-webkit-text-fill-color:rgba(255,255,255,0.85);}
-.sidebar-tag{font-family:'Share Tech Mono',monospace;font-size:0.48rem;color:rgba(0,97,255,0.35);letter-spacing:3px;margin-top:4px;}
+.sidebar-tag{font-family:'Share Tech Mono',monospace;font-size:0.48rem;color:rgba(0,245,255,0.35);letter-spacing:3px;margin-top:4px;}
 .sidebar-status{display:flex;align-items:center;gap:6px;margin-top:8px;font-family:'Share Tech Mono',monospace;font-size:0.48rem;letter-spacing:1px;}
 .status-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s infinite;}
 .status-dot.red{background:var(--red);box-shadow:0 0 8px var(--red);}
 @keyframes pulse{0%,100%{opacity:0.4}50%{opacity:1}}
 nav.sidebar-nav{flex:1;padding:12px 0;}
-.nav-section{font-family:'Share Tech Mono',monospace;font-size:0.45rem;color:rgba(0,97,255,0.35);letter-spacing:4px;padding:14px 20px 6px;text-transform:uppercase;}
-.nav-item{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;transition:all 0.2s;border-left:2px solid transparent;font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:rgba(40,60,120,0.55);letter-spacing:1.5px;text-transform:uppercase;position:relative;}
-.nav-item:hover{color:var(--cyan);background:rgba(0,97,255,0.04);}
-.nav-item.active{color:var(--cyan);background:rgba(0,97,255,0.06);border-left-color:var(--cyan);}
+.nav-section{font-family:'Share Tech Mono',monospace;font-size:0.45rem;color:rgba(0,245,255,0.25);letter-spacing:4px;padding:14px 20px 6px;text-transform:uppercase;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;transition:all 0.2s;border-left:2px solid transparent;font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:rgba(200,240,255,0.45);letter-spacing:1.5px;text-transform:uppercase;position:relative;}
+.nav-item:hover{color:var(--cyan);background:rgba(0,245,255,0.04);}
+.nav-item.active{color:var(--cyan);background:rgba(0,245,255,0.06);border-left-color:var(--cyan);}
 .nav-icon{font-size:1rem;flex-shrink:0;}
 .nav-badge{background:var(--red);color:#fff;font-size:0.42rem;padding:2px 6px;border-radius:10px;font-family:'Share Tech Mono',monospace;letter-spacing:0;animation:pulse 1.5s infinite;}
 .sidebar-footer{padding:16px 20px;border-top:1px solid var(--glass-border);}
-.logout-btn{width:100%;padding:9px;border:1px solid rgba(229,57,53,0.25);background:rgba(229,57,53,0.04);color:var(--red);font-family:'Share Tech Mono',monospace;font-size:0.55rem;letter-spacing:2px;cursor:pointer;transition:all 0.3s;}
-.logout-btn:hover{background:rgba(229,57,53,0.1);border-color:var(--red);}
+.logout-btn{width:100%;padding:9px;border:1px solid rgba(255,68,85,0.3);background:rgba(255,68,85,0.05);color:var(--red);font-family:'Share Tech Mono',monospace;font-size:0.55rem;letter-spacing:2px;cursor:pointer;transition:all 0.3s;}
+.logout-btn:hover{background:rgba(255,68,85,0.12);border-color:var(--red);}
+.img-upload-wrap{margin-top:10px;}
 .img-preview{width:100%;height:120px;border:1px solid var(--glass-border);
-  background:rgba(0,97,255,0.02);display:flex;align-items:center;justify-content:center;
+  background:rgba(0,245,255,0.03);display:flex;align-items:center;justify-content:center;
   margin-bottom:8px;overflow:hidden;position:relative;}
 .img-preview img{width:100%;height:100%;object-fit:cover;}
-.img-preview .img-placeholder{font-size:2rem;opacity:0.35;}
-.upload-btn{width:100%;padding:8px;background:rgba(0,97,255,0.05);
-  border:1px dashed rgba(0,97,255,0.3);color:var(--cyan);
+.img-preview .img-placeholder{font-size:2rem;opacity:0.4;}
+.upload-btn{width:100%;padding:8px;background:rgba(0,245,255,0.08);
+  border:1px dashed rgba(0,245,255,0.3);color:var(--cyan);
   font-family:'Share Tech Mono',monospace;font-size:0.55rem;letter-spacing:2px;
   cursor:pointer;transition:all 0.3s;display:flex;align-items:center;justify-content:center;gap:8px;}
-.upload-btn:hover{background:rgba(0,97,255,0.1);border-color:var(--cyan);}
+.upload-btn:hover{background:rgba(0,245,255,0.15);border-color:var(--cyan);}
 .upload-btn.uploading{opacity:0.6;pointer-events:none;}
 .upload-progress{font-family:'Share Tech Mono',monospace;font-size:0.5rem;
-  color:rgba(0,97,255,0.5);letter-spacing:1px;margin-top:4px;text-align:center;min-height:12px;}
-.mobile-menu-btn{display:none;position:fixed;top:14px;left:14px;z-index:200;background:rgba(255,255,255,0.95);border:1px solid var(--glass-border);color:var(--cyan);width:40px;height:40px;align-items:center;justify-content:center;cursor:pointer;font-size:1.2rem;box-shadow:0 2px 12px rgba(0,97,255,0.1);}
+  color:rgba(0,245,255,0.5);letter-spacing:1px;margin-top:4px;text-align:center;min-height:12px;}
+.mobile-menu-btn{display:none;position:fixed;top:14px;left:14px;z-index:200;background:rgba(0,20,40,0.9);border:1px solid var(--glass-border);color:var(--cyan);width:40px;height:40px;align-items:center;justify-content:center;cursor:pointer;font-size:1.2rem;backdrop-filter:blur(10px);}
 
 /* ── Main ── */
-#main{flex:1;overflow-y:auto;display:flex;flex-direction:column;position:relative;z-index:1;background:var(--darker);}
+#main{flex:1;overflow-y:auto;display:flex;flex-direction:column;position:relative;z-index:1;}
 
 /* ══ LAYOUT ══ */
 #app{display:flex;height:100vh;overflow:hidden;position:relative;z-index:1;}
 
 /* ── Sidebar ── */
-#sidebar{width:var(--sidebar);background:rgba(255,255,255,0.98);border-right:1px solid var(--glass-border);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;transition:transform 0.3s;position:relative;z-index:2;box-shadow:2px 0 20px rgba(0,97,255,0.06);}
-.main-header{padding:20px 28px 16px;border-bottom:1px solid var(--glass-border);background:rgba(255,255,255,0.95);backdrop-filter:blur(16px);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
-.page-title{font-family:'Orbitron',monospace;font-size:1rem;font-weight:700;color:var(--admin-text);letter-spacing:2px;}
-.page-subtitle{font-family:'Share Tech Mono',monospace;font-size:0.52rem;color:rgba(0,97,255,0.5);letter-spacing:2px;margin-top:4px;}
+#sidebar{width:var(--sidebar);background:var(--asidebar);border-right:1px solid var(--acard-border);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;transition:transform 0.3s;position:relative;z-index:2;}
+.main-header{padding:20px 28px 16px;border-bottom:1px solid var(--acard-border);background:var(--aheader);backdrop-filter:blur(16px);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.page-title{font-family:'Orbitron',monospace;font-size:1rem;font-weight:700;color:#fff;letter-spacing:2px;}
+.page-subtitle{font-family:'Share Tech Mono',monospace;font-size:0.52rem;color:rgba(0,245,255,0.4);letter-spacing:2px;margin-top:4px;}
 .header-actions{display:flex;gap:10px;align-items:center;}
-.view-site-btn{padding:8px 18px;border:1px solid var(--cyan);color:var(--cyan);background:rgba(0,97,255,0.04);font-family:'Share Tech Mono',monospace;font-size:0.55rem;letter-spacing:2px;cursor:pointer;text-decoration:none;transition:all 0.3s;display:inline-flex;align-items:center;gap:6px;}
-.view-site-btn:hover{background:rgba(0,97,255,0.1);}
-.content{padding:24px 28px;flex:1;background:var(--darker);}
+.view-site-btn{padding:8px 18px;border:1px solid var(--cyan);color:var(--cyan);background:rgba(0,245,255,0.05);font-family:'Share Tech Mono',monospace;font-size:0.55rem;letter-spacing:2px;cursor:pointer;text-decoration:none;transition:all 0.3s;display:inline-flex;align-items:center;gap:6px;}
+.view-site-btn:hover{background:rgba(0,245,255,0.12);}
+.content{padding:24px 28px;flex:1;}
 
 /* ══ PANELS ══ */
 .panel{display:none;}
@@ -181,27 +194,27 @@ nav.sidebar-nav{flex:1;padding:12px 0;}
 
 /* ══ CARDS ══ */
 .cards-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px;}
-.stat-card{background:rgba(255,255,255,0.97);border:1px solid var(--glass-border);padding:20px;position:relative;overflow:hidden;transition:border-color 0.3s;border-radius:4px;box-shadow:0 2px 16px rgba(0,97,255,0.06);}
-.stat-card:hover{border-color:rgba(0,97,255,0.3);}
+.stat-card{background:var(--acard);border:1px solid var(--acard-border);padding:20px;position:relative;overflow:hidden;transition:border-color 0.3s;border-radius:4px;backdrop-filter:blur(8px);}
+.stat-card:hover{border-color:rgba(0,245,255,0.3);}
 .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--cyan),var(--blue));}
 .stat-card-num{font-family:'Orbitron',monospace;font-size:1.8rem;font-weight:900;color:var(--cyan);line-height:1;}
-.stat-card-label{font-family:'Share Tech Mono',monospace;font-size:0.5rem;color:rgba(40,60,120,0.4);letter-spacing:2px;margin-top:6px;text-transform:uppercase;}
-.stat-card-icon{position:absolute;top:16px;right:16px;font-size:1.4rem;opacity:0.35;}
+.stat-card-label{font-family:'Share Tech Mono',monospace;font-size:0.5rem;color:rgba(200,240,255,0.4);letter-spacing:2px;margin-top:6px;text-transform:uppercase;}
+.stat-card-icon{position:absolute;top:16px;right:16px;font-size:1.4rem;opacity:0.4;}
 
 /* ══ FORM ELEMENTS ══ */
-.form-section{background:rgba(255,255,255,0.97);border:1px solid var(--glass-border);padding:24px;margin-bottom:20px;border-radius:4px;box-shadow:0 2px 16px rgba(0,97,255,0.05);}
+.form-section{background:var(--acard);border:1px solid var(--acard-border);padding:24px;margin-bottom:20px;border-radius:4px;backdrop-filter:blur(8px);}
 .form-section-title{font-family:'Orbitron',monospace;font-size:0.72rem;color:var(--cyan);letter-spacing:2px;margin-bottom:18px;display:flex;align-items:center;gap:8px;}
 .form-section-title::before{content:'';width:12px;height:1px;background:var(--cyan);}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
 .form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
 .field{display:flex;flex-direction:column;gap:7px;}
 .field.full{grid-column:1/-1;}
-.field label{font-family:'Share Tech Mono',monospace;font-size:0.55rem;color:rgba(0,97,255,0.55);letter-spacing:2px;}
-.field input,.field textarea,.field select{background:rgba(0,97,255,0.02);border:1px solid var(--glass-border);color:var(--admin-text);padding:10px 13px;font-family:'Exo 2',sans-serif;font-size:0.88rem;outline:none;transition:border-color 0.3s;width:100%;}
-.field input:focus,.field textarea:focus,.field select:focus{border-color:rgba(0,97,255,0.4);}
+.field label{font-family:'Share Tech Mono',monospace;font-size:0.55rem;color:rgba(0,245,255,0.5);letter-spacing:2px;}
+.field input,.field textarea,.field select{background:var(--ainput-bg);border:1px solid var(--acard-border);color:var(--atext);padding:10px 13px;font-family:'Exo 2',sans-serif;font-size:0.88rem;outline:none;transition:border-color 0.3s;width:100%;}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:rgba(0,245,255,0.45);}
 .field textarea{resize:vertical;min-height:80px;}
 .field input[type="color"]{height:42px;padding:4px 8px;cursor:pointer;}
-.field select option{background:#fff;color:var(--admin-text);}
+.field select option{background:var(--aselect-bg);}
 .save-btn{padding:11px 28px;background:linear-gradient(135deg,var(--cyan),var(--blue));color:#000;font-family:'Orbitron',monospace;font-size:0.62rem;font-weight:700;letter-spacing:2px;border:none;cursor:pointer;clip-path:polygon(7px 0,100% 0,calc(100% - 7px) 100%,0 100%);transition:all 0.3s;}
 .save-btn:hover{box-shadow:0 0 25px rgba(0,245,255,0.4);}
 .save-btn:disabled{opacity:0.5;cursor:not-allowed;}
@@ -257,11 +270,46 @@ nav.sidebar-nav{flex:1;padding:12px 0;}
 .mode-card-screen{width:100%;height:70px;border-radius:3px;margin-bottom:10px;padding:10px;display:flex;flex-direction:column;justify-content:center;}
 .dark-screen{background:#010810;}
 .light-screen{background:#f0f4ff;}
+
+/* ══ ADMIN LIGHT MODE ══ */
+body.admin-light {
+  --abg: #f0f4ff;
+  --abg2: #e8ecfc;
+  --acard: rgba(255,255,255,0.92);
+  --acard-border: rgba(0,100,255,0.14);
+  --atext: #0d1240;
+  --atext2: rgba(20,40,120,0.55);
+  --asidebar: rgba(245,248,255,0.97);
+  --aheader: rgba(240,244,255,0.92);
+  --ainput-bg: rgba(0,80,255,0.04);
+  --aselect-bg: #f0f4ff;
+  --glass-border: rgba(0,100,255,0.14);
+}
+body.admin-light .nav-item { color: rgba(20,40,120,0.5); }
+body.admin-light .nav-item:hover,
+body.admin-light .nav-item.active { color: var(--cyan); background: rgba(0,80,255,0.06); }
+body.admin-light .nav-section { color: rgba(0,80,200,0.3); }
+body.admin-light .sidebar-tag { color: rgba(0,80,200,0.35); }
+body.admin-light .page-subtitle { color: rgba(0,80,200,0.4); }
+body.admin-light .stat-card-label { color: rgba(20,40,120,0.45); }
+body.admin-light .field label { color: rgba(0,80,200,0.55); }
+body.admin-light .form-section-title { color: var(--cyan); }
+body.admin-light .no-data { color: rgba(0,80,200,0.25); }
+body.admin-light .enq-table th { color: rgba(0,80,200,0.5); }
+body.admin-light .enq-table td { color: rgba(20,40,120,0.75); border-color: rgba(0,80,200,0.07); }
+body.admin-light .service-item-title { color: var(--cyan); }
+body.admin-light .sidebar-logo-text, body.admin-light .login-logo { color: inherit; }
+body.admin-light .nav-badge { color: #fff; }
+body.admin-light .stat-card-num { color: var(--cyan); }
+body.admin-light #admin-bg-canvas { opacity: 0.18; }
+body.admin-light .toast { background: rgba(240,244,255,0.97); color: var(--cyan); }
+body.admin-light .toast.error { color: #ff2244; border-color: #ff2244; }
+body.admin-light .toast.success { color: #00aa55; border-color: #00aa55; }
 .mode-card-label{font-family:'Orbitron',monospace;font-size:0.55rem;letter-spacing:2px;margin-bottom:4px;}
 .mode-card-desc{font-family:'Share Tech Mono',monospace;font-size:0.42rem;color:rgba(200,240,255,0.4);letter-spacing:1px;}
 
 /* ══ SERVICES EDITOR ══ */
-.service-editor-item{background:rgba(255,255,255,0.97);border:1px solid var(--glass-border);padding:18px;margin-bottom:12px;position:relative;border-radius:4px;box-shadow:0 1px 8px rgba(0,97,255,0.04);}
+.service-editor-item{background:var(--acard);border:1px solid var(--acard-border);padding:18px;margin-bottom:12px;position:relative;border-radius:4px;}
 .service-editor-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--cyan);}
 .service-item-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
 .service-item-title{font-family:'Orbitron',monospace;font-size:0.65rem;color:var(--cyan);letter-spacing:1px;}
@@ -269,9 +317,9 @@ nav.sidebar-nav{flex:1;padding:12px 0;}
 /* ══ ENQUIRIES TABLE ══ */
 .table-wrap{overflow-x:auto;}
 .enq-table{width:100%;border-collapse:collapse;}
-.enq-table th{font-family:'Share Tech Mono',monospace;font-size:0.52rem;color:rgba(0,97,255,0.5);letter-spacing:2px;padding:10px 14px;text-align:left;border-bottom:1px solid var(--glass-border);white-space:nowrap;}
-.enq-table td{padding:12px 14px;font-size:0.82rem;color:rgba(20,40,100,0.75);border-bottom:1px solid rgba(0,97,255,0.05);vertical-align:top;}
-.enq-table tr:hover td{background:rgba(0,97,255,0.02);}
+.enq-table th{font-family:'Share Tech Mono',monospace;font-size:0.52rem;color:rgba(0,245,255,0.5);letter-spacing:2px;padding:10px 14px;text-align:left;border-bottom:1px solid var(--glass-border);white-space:nowrap;}
+.enq-table td{padding:12px 14px;font-size:0.82rem;color:rgba(200,240,255,0.7);border-bottom:1px solid rgba(0,245,255,0.05);vertical-align:top;}
+.enq-table tr:hover td{background:rgba(0,245,255,0.02);}
 .status-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;font-family:'Share Tech Mono',monospace;font-size:0.48rem;letter-spacing:1px;border-radius:2px;}
 .status-badge.new{background:rgba(0,245,255,0.1);border:1px solid rgba(0,245,255,0.3);color:var(--cyan);}
 .status-badge.done{background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.3);color:var(--green);}
@@ -282,25 +330,13 @@ nav.sidebar-nav{flex:1;padding:12px 0;}
 .enq-btn.done-btn:hover{background:rgba(0,255,136,0.15);}
 .enq-btn.del-enq{color:var(--red);border-color:rgba(255,68,85,0.3);background:rgba(255,68,85,0.05);}
 .enq-btn.del-enq:hover{background:rgba(255,68,85,0.15);}
-.no-data{text-align:center;padding:40px;font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:rgba(0,97,255,0.25);letter-spacing:3px;}
+.no-data{text-align:center;padding:40px;font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:rgba(0,245,255,0.2);letter-spacing:3px;}
 .enq-filter{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
-.filter-btn{padding:6px 14px;border:1px solid var(--glass-border);background:transparent;color:rgba(40,60,140,0.45);font-family:'Share Tech Mono',monospace;font-size:0.5rem;letter-spacing:1px;cursor:pointer;transition:all 0.2s;}
-.filter-btn.active{border-color:var(--cyan);color:var(--cyan);background:rgba(0,97,255,0.05);}
+.filter-btn{padding:6px 14px;border:1px solid var(--glass-border);background:transparent;color:rgba(200,240,255,0.4);font-family:'Share Tech Mono',monospace;font-size:0.5rem;letter-spacing:1px;cursor:pointer;transition:all 0.2s;}
+.filter-btn.active{border-color:var(--cyan);color:var(--cyan);background:rgba(0,245,255,0.06);}
 
-/* ══ GALLERY EDITOR ══ */
-.gal-editor-card{background:rgba(255,255,255,0.97);border:1px solid var(--glass-border);border-radius:4px;overflow:hidden;position:relative;box-shadow:0 2px 12px rgba(0,97,255,0.06);}
-.gal-editor-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--cyan);}
-.gal-card-img{width:100%;height:140px;object-fit:cover;display:block;}
-.gal-card-img-placeholder{width:100%;height:140px;background:rgba(0,97,255,0.04);display:flex;align-items:center;justify-content:center;font-size:2rem;color:rgba(0,97,255,0.2);}
-.gal-card-body{padding:12px 14px;}
-.gal-card-label{font-family:'Orbitron',monospace;font-size:0.6rem;color:var(--cyan);letter-spacing:1.5px;margin-bottom:4px;}
-.gal-card-sub{font-family:'Share Tech Mono',monospace;font-size:0.48rem;color:rgba(40,60,140,0.4);letter-spacing:1px;margin-bottom:10px;}
-.gal-card-badge-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px;}
-.gal-card-badge{background:rgba(0,97,255,0.06);border:1px solid rgba(0,97,255,0.18);padding:2px 8px;font-family:'Share Tech Mono',monospace;font-size:0.44rem;color:var(--cyan);letter-spacing:1px;}
-.gal-card-actions{display:flex;gap:6px;border-top:1px solid var(--glass-border);padding:10px 14px;background:rgba(0,97,255,0.02);}
-
-
-.toast{position:fixed;bottom:24px;right:24px;z-index:9999;background:rgba(255,255,255,0.97);border:1px solid var(--cyan);box-shadow:0 8px 32px rgba(0,97,255,0.15);padding:14px 20px;font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--cyan);letter-spacing:1px;transform:translateY(80px);opacity:0;transition:all 0.4s;max-width:300px;}
+/* ══ TOAST ══ */
+.toast{position:fixed;bottom:24px;right:24px;z-index:9999;background:rgba(0,20,40,0.95);border:1px solid var(--cyan);backdrop-filter:blur(16px);padding:14px 20px;font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--cyan);letter-spacing:1px;transform:translateY(80px);opacity:0;transition:all 0.4s;max-width:300px;}
 .toast.show{transform:translateY(0);opacity:1;}
 .toast.error{border-color:var(--red);color:var(--red);}
 .toast.success{border-color:var(--green);color:var(--green);}
@@ -311,7 +347,7 @@ nav.sidebar-nav{flex:1;padding:12px 0;}
   #app{display:flex !important;flex-direction:column;height:100dvh;height:100vh;}
 
   /* ── Sidebar slides in from left (hamburger still works) ── */
-  #sidebar{position:fixed;inset:0 auto 0 0;z-index:300;transform:translateX(-100%);width:280px;transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);background:rgba(255,255,255,0.99);}
+  #sidebar{position:fixed;inset:0 auto 0 0;z-index:300;transform:translateX(-100%);width:280px;transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);}
   #sidebar.open{transform:translateX(0);box-shadow:8px 0 40px rgba(0,0,0,0.8);}
   #sidebar-backdrop{display:none;position:fixed;inset:0;z-index:290;background:rgba(0,0,0,0.65);backdrop-filter:blur(3px);}
   #sidebar-backdrop.show{display:block;}
@@ -377,12 +413,11 @@ nav.sidebar-nav{flex:1;padding:12px 0;}
     bottom:0;left:0;right:0;
     z-index:200;
     height:64px;
-    background:rgba(255,255,255,0.98);
-    border-top:1px solid rgba(0,97,255,0.12);
+    background:rgba(1,5,15,0.97);
+    border-top:1px solid rgba(0,245,255,0.15);
     backdrop-filter:blur(20px);
     -webkit-backdrop-filter:blur(20px);
     padding-bottom:env(safe-area-inset-bottom,0px);
-    box-shadow:0 -4px 20px rgba(0,97,255,0.08);
   }
   #mobile-bottom-nav .mbn-item{
     flex:1;
@@ -405,7 +440,7 @@ nav.sidebar-nav{flex:1;padding:12px 0;}
     font-family:'Share Tech Mono',monospace;
     font-size:0.38rem;
     letter-spacing:0.5px;
-    color:rgba(40,60,140,0.35);
+    color:rgba(200,240,255,0.35);
     transition:color 0.2s;
     text-transform:uppercase;
   }
@@ -441,9 +476,9 @@ nav.sidebar-nav{flex:1;padding:12px 0;}
     position:fixed;
     bottom:64px;left:0;right:0;
     z-index:199;
-    background:rgba(255,255,255,0.99);
-    border-top:1px solid rgba(0,97,255,0.12);
-    box-shadow:0 -8px 32px rgba(0,97,255,0.1);
+    background:rgba(1,8,20,0.98);
+    border-top:1px solid rgba(0,245,255,0.15);
+    backdrop-filter:blur(20px);
     padding:16px 12px 8px;
     transform:translateY(100%);
     transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);
@@ -463,19 +498,19 @@ nav.sidebar-nav{flex:1;padding:12px 0;}
     align-items:center;
     gap:6px;
     padding:14px 8px;
-    border:1px solid rgba(0,97,255,0.1);
-    background:rgba(0,97,255,0.02);
+    border:1px solid rgba(0,245,255,0.1);
+    background:rgba(0,245,255,0.02);
     cursor:pointer;
     border-radius:2px;
     transition:all 0.2s;
     -webkit-tap-highlight-color:transparent;
   }
-  #mobile-more-drawer .mmd-item:active{background:rgba(0,97,255,0.07);}
+  #mobile-more-drawer .mmd-item:active{background:rgba(0,245,255,0.08);}
   #mobile-more-drawer .mmd-item .mmd-icon{font-size:1.5rem;}
   #mobile-more-drawer .mmd-item .mmd-label{
     font-family:'Share Tech Mono',monospace;
     font-size:0.42rem;
-    color:rgba(40,60,140,0.55);
+    color:rgba(200,240,255,0.5);
     letter-spacing:0.5px;
     text-transform:uppercase;
     text-align:center;
@@ -609,10 +644,6 @@ nav.sidebar-nav{flex:1;padding:12px 0;}
       <div class="mmd-icon">📦</div>
       <div class="mmd-label">Products</div>
     </div>
-    <div class="mmd-item" onclick="mobileNavTo('gallery',null);closeMobileMore()">
-      <div class="mmd-icon">🖼️</div>
-      <div class="mmd-label">Gallery</div>
-    </div>
     <div class="mmd-item" onclick="mobileNavTo('branches',null);closeMobileMore()">
       <div class="mmd-icon">🏪</div>
       <div class="mmd-label">Branches</div>
@@ -648,24 +679,34 @@ nav.sidebar-nav{flex:1;padding:12px 0;}
       <div class="nav-section">CONTENT</div>
       <div class="nav-item" onclick="showPanel('services')"><span class="nav-icon">⚙️</span>Services</div>
       <div class="nav-item" onclick="showPanel('products')"><span class="nav-icon">📦</span>Products</div>
-      <div class="nav-item" onclick="showPanel('gallery')"><span class="nav-icon">🖼️</span>Gallery / Photos</div>
       <div class="nav-item" onclick="showPanel('branches')"><span class="nav-icon">🏪</span>Branches</div>
     </nav>
     <div class="sidebar-footer" style="position:relative;">
       <!-- Sidebar footer border decoration — top bar with corner dots -->
-      <div aria-hidden="true" style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(0,97,255,0.2),transparent);pointer-events:none;"></div>
+      <div aria-hidden="true" style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(0,245,255,0.25),transparent);pointer-events:none;"></div>
       <!-- Corner dots on footer top-edge -->
-      <div aria-hidden="true" style="position:absolute;top:-3px;left:16px;width:5px;height:5px;border:1px solid rgba(0,97,255,0.25);background:rgba(0,97,255,0.06);pointer-events:none;"></div>
+      <div aria-hidden="true" style="position:absolute;top:-3px;left:16px;width:5px;height:5px;border:1px solid rgba(0,245,255,0.35);background:rgba(0,245,255,0.08);pointer-events:none;"></div>
       <!-- TAP ZONE 2: top-right corner dot of footer (3 taps → triggers master) -->
       <div id="master-ghost-tap" aria-hidden="true"
         style="position:absolute;top:-3px;right:16px;width:5px;height:5px;
-               border:1px solid rgba(0,97,255,0.25);background:rgba(0,97,255,0.06);
+               border:1px solid rgba(0,245,255,0.35);background:rgba(0,245,255,0.08);
                cursor:default;-webkit-user-select:none;user-select:none;touch-action:manipulation;z-index:2;">
       </div>
 
       <div id="admin-user-info" style="display:none;padding:10px 0 12px;border-bottom:1px solid var(--glass-border);margin-bottom:12px;">
-        <div style="font-family:'Share Tech Mono',monospace;font-size:0.48rem;color:rgba(0,97,255,0.4);letter-spacing:2px;margin-bottom:4px;">LOGGED IN AS</div>
-        <div id="admin-email" style="font-family:'Exo 2',sans-serif;font-size:0.72rem;color:rgba(20,40,100,0.7);word-break:break-all;"></div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:0.48rem;color:rgba(0,245,255,0.35);letter-spacing:2px;margin-bottom:4px;">LOGGED IN AS</div>
+        <div id="admin-email" style="font-family:'Exo 2',sans-serif;font-size:0.72rem;color:rgba(200,240,255,0.7);word-break:break-all;"></div>
+      </div>
+      <!-- Admin Panel Mode Toggle -->
+      <div style="display:flex;gap:6px;margin-bottom:10px;">
+        <button id="admin-mode-dark-btn" onclick="setAdminMode('dark')"
+          style="flex:1;padding:8px 4px;font-family:'Share Tech Mono',monospace;font-size:0.46rem;letter-spacing:1px;cursor:pointer;border:1px solid var(--cyan);background:rgba(0,245,255,0.1);color:var(--cyan);transition:all 0.25s;">
+          🌑 DARK
+        </button>
+        <button id="admin-mode-light-btn" onclick="setAdminMode('light')"
+          style="flex:1;padding:8px 4px;font-family:'Share Tech Mono',monospace;font-size:0.46rem;letter-spacing:1px;cursor:pointer;border:1px solid rgba(0,245,255,0.2);background:transparent;color:rgba(200,240,255,0.3);transition:all 0.25s;">
+          ☀️ LIGHT
+        </button>
       </div>
       <button class="logout-btn" onclick="doLogout()">⏻ LOGOUT</button>
     </div>
@@ -992,60 +1033,6 @@ nav.sidebar-nav{flex:1;padding:12px 0;}
         <div id="products-editor"></div>
       </div>
 
-      <!-- ══ GALLERY ══ -->
-      <div class="panel" id="panel-gallery">
-        <div class="form-section">
-          <div class="form-section-title">📸 Store Gallery — Cloudinary Image Upload</div>
-          <div style="font-family:'Share Tech Mono',monospace;font-size:0.5rem;color:rgba(0,245,255,0.35);letter-spacing:1px;margin-bottom:18px;line-height:1.8;">
-            Yahan se apni store ki real photos upload karo. Ye photos website ke "Our Store" gallery section mein dikhegi.<br>
-            Maximum 10 photos recommended · JPEG/PNG/WEBP supported · Auto-optimized by Cloudinary
-          </div>
-
-          <!-- Upload new photo -->
-          <div style="background:rgba(0,245,255,0.03);border:1px dashed rgba(0,245,255,0.2);padding:20px;margin-bottom:20px;border-radius:4px;">
-            <div style="font-family:'Orbitron',monospace;font-size:0.62rem;color:var(--cyan);letter-spacing:2px;margin-bottom:14px;">＋ UPLOAD NEW PHOTO</div>
-            <div class="form-grid">
-              <div class="field">
-                <label>Photo Label (kya hai ye photo?)</label>
-                <input type="text" id="gal-label" placeholder="Our Showroom, Laptop Section...">
-              </div>
-              <div class="field">
-                <label>Sub-label (optional)</label>
-                <input type="text" id="gal-sub" placeholder="Sanganer Bazar, Jaipur">
-              </div>
-              <div class="field">
-                <label>Badge Text (optional)</label>
-                <input type="text" id="gal-badge" placeholder="STORE, ASUS, REPAIR...">
-              </div>
-              <div class="field">
-                <label>Size (gallery mein)</label>
-                <select id="gal-size">
-                  <option value="normal">Normal</option>
-                  <option value="big">Big (wide card)</option>
-                </select>
-              </div>
-            </div>
-            <div style="margin-top:14px;">
-              <div class="img-preview" id="gal-new-preview" style="height:160px;">
-                <span class="img-placeholder">🖼️</span>
-              </div>
-              <label class="upload-btn" id="gal-upload-btn" style="margin-top:8px;">
-                📤 SELECT & UPLOAD IMAGE
-                <input type="file" accept="image/*" style="display:none" id="gal-file-input" onchange="handleGalleryUpload(event)">
-              </label>
-              <div class="upload-progress" id="gal-upload-prog"></div>
-            </div>
-          </div>
-
-          <!-- Gallery grid -->
-          <div style="font-family:'Orbitron',monospace;font-size:0.62rem;color:var(--cyan);letter-spacing:2px;margin-bottom:14px;">📋 CURRENT GALLERY PHOTOS</div>
-          <div id="gallery-editor" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;"></div>
-          <div id="gallery-empty" style="display:none;text-align:center;padding:40px;font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:rgba(0,245,255,0.2);letter-spacing:3px;">
-            // NO PHOTOS UPLOADED YET
-          </div>
-        </div>
-      </div>
-
       <!-- ══ BRANCHES ══ -->
       <div class="panel" id="panel-branches">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
@@ -1208,6 +1195,49 @@ window.doLogin = async function() {
     errEl.textContent = msgs[e.code] || 'Login failed: ' + e.message;
   }
 };
+
+// ── ADMIN PANEL MODE (Dark / Light) ──
+window.setAdminMode = function(mode) {
+  const body = document.body;
+  const darkBtn = document.getElementById('admin-mode-dark-btn');
+  const lightBtn = document.getElementById('admin-mode-light-btn');
+
+  if (mode === 'light') {
+    body.classList.add('admin-light');
+    if (darkBtn) {
+      darkBtn.style.cssText = 'flex:1;padding:8px 4px;font-family:'Share Tech Mono',monospace;font-size:0.46rem;letter-spacing:1px;cursor:pointer;border:1px solid rgba(0,80,200,0.2);background:transparent;color:rgba(20,40,120,0.4);transition:all 0.25s;';
+    }
+    if (lightBtn) {
+      lightBtn.style.cssText = 'flex:1;padding:8px 4px;font-family:'Share Tech Mono',monospace;font-size:0.46rem;letter-spacing:1px;cursor:pointer;border:1px solid var(--cyan);background:rgba(0,80,255,0.1);color:var(--cyan);transition:all 0.25s;';
+    }
+    // Pause race engine in light mode (looks bad on white)
+    window._adminColourPaused = true;
+  } else {
+    body.classList.remove('admin-light');
+    if (darkBtn) {
+      darkBtn.style.cssText = 'flex:1;padding:8px 4px;font-family:'Share Tech Mono',monospace;font-size:0.46rem;letter-spacing:1px;cursor:pointer;border:1px solid var(--cyan);background:rgba(0,245,255,0.1);color:var(--cyan);transition:all 0.25s;';
+    }
+    if (lightBtn) {
+      lightBtn.style.cssText = 'flex:1;padding:8px 4px;font-family:'Share Tech Mono',monospace;font-size:0.46rem;letter-spacing:1px;cursor:pointer;border:1px solid rgba(0,245,255,0.2);background:transparent;color:rgba(200,240,255,0.3);transition:all 0.25s;';
+    }
+    if (!window._currentThemeCyan) window._adminColourPaused = false;
+  }
+  // Save preference
+  localStorage.setItem('adminPanelMode', mode);
+};
+
+// Auto-restore mode on load
+(function restoreAdminMode() {
+  const saved = localStorage.getItem('adminPanelMode');
+  if (saved === 'light') {
+    // Run after DOM ready
+    document.addEventListener('DOMContentLoaded', function() {
+      window.setAdminMode('light');
+    });
+    // Also try immediately if DOM already ready
+    if (document.readyState !== 'loading') window.setAdminMode('light');
+  }
+})();
 
 window.doLogout = async function() {
   if(auth) await signOut(auth);
@@ -1759,32 +1789,8 @@ async function loadBranchesEditor() {
 
 function getDefaultBranches() {
   return [
-    {
-      tag: "HEADQUARTER",
-      name: "Race Computer Services",
-      badge: "RETAIL STORE",
-      isMain: true,
-      address: "1063, Jhalaniyon Ka Rasta, Kishanpole Bazaar, Jaipur - 302001",
-      phone: "+918058016000",
-      whatsapp: "919828012470",
-      email: "race16000@gmail.com",
-      hours: "Mon – Sat: 10:00 AM – 8:00 PM | Sunday: Closed",
-      mapUrl: "https://maps.app.goo.gl/18P5gkiYyAP7uSBr5?g_st=aw",
-      order: 0
-    },
-    {
-      tag: "RETAIL STORE",
-      name: "Race Computer",
-      badge: "Shop no.1",
-      isMain: false,
-      address: "Race Computer, Shop No. 1, Opp Pinjrapole Goushala, Sheopur Rd, Sanganer, Pratap Nagar, Jaipur, Rajasthan 302033",
-      phone: "+918058516000",
-      whatsapp: "918058516000",
-      email: "racecomputerindia@gmail.com",
-      hours: "Mon – Sat: 10:00 AM – 8:00 PM | Month's Last Sunday: Closed",
-      mapUrl: "",
-      order: 1
-    }
+    { tag:"BRANCH 01", name:"Sanganer Store", badge:"RETAIL STORE", isMain:false, address:"S. No 1, Opposite Gosala, Sheopur Road, Pratapnagar, Sanganer Bazar, Jaipur — 302029", phone:"", whatsapp:"", email:"", hours:"Mon – Sat: 10:00 AM – 8:00 PM | Sunday: Closed", mapUrl:"https://maps.google.com/?q=Race+Computer+Sanganer+Jaipur", order:0 },
+    { tag:"BRANCH 02", name:"Main Branch", badge:"MAIN STORE", isMain:true, address:"— To be updated —", phone:"", whatsapp:"", email:"", hours:"— To be updated —", mapUrl:"", order:1 }
   ];
 }
 
@@ -1903,7 +1909,6 @@ const panelTitles = {
   'contact-info': ['Contact Info', '// PHONE, ADDRESS & HOURS'],
   services: ['Services', '// ADD · EDIT · REMOVE SERVICES'],
   products: ['Products', '// MANAGE PRODUCT CAROUSEL'],
-  gallery: ['Gallery / Photos', '// STORE PHOTOS · CLOUDINARY UPLOAD'],
   branches: ['Branches', '// MANAGE STORE LOCATIONS'],
 };
 
@@ -1922,9 +1927,6 @@ window.showPanel = function(name) {
   const titles = panelTitles[name] || [name, ''];
   document.getElementById('page-title-el').textContent = titles[0];
   document.getElementById('page-subtitle-el').textContent = titles[1];
-
-  // Load gallery when panel opened
-  if(name === 'gallery') { if(typeof loadGalleryEditor === 'function') loadGalleryEditor(); }
 
   // Close mobile sidebar
   const sidebar = document.getElementById('sidebar');
@@ -1989,133 +1991,7 @@ window.closeMobileMore = function() {
   if(bdrop) bdrop.classList.remove('show');
 };
 
-// ══ GALLERY EDITOR JS ══
-let localGallery = [];
-
-window.loadGalleryEditor = async function() {
-  const db = window._db, ref = window._ref, get = window._get;
-  if(!db){ renderGalleryEditor([]); return; }
-  try {
-    const snap = await get(ref(db, 'gallery'));
-    localGallery = [];
-    if(snap.exists()) {
-      snap.forEach(child => localGallery.push({ id: child.key, ...child.val() }));
-      localGallery.sort((a,b) => (a.order||0)-(b.order||0));
-    }
-    renderGalleryEditor(localGallery);
-  } catch(e) { console.warn(e); renderGalleryEditor([]); }
-};
-
-function renderGalleryEditor(items) {
-  const container = document.getElementById('gallery-editor');
-  const empty = document.getElementById('gallery-empty');
-  if(!items || items.length === 0) {
-    container.innerHTML = '';
-    if(empty) empty.style.display = 'block';
-    return;
-  }
-  if(empty) empty.style.display = 'none';
-  container.innerHTML = items.map((g,i) => `
-    <div class="gal-editor-card">
-      ${g.url ? `<img class="gal-card-img" src="${g.url}" alt="${g.label||''}">` : '<div class="gal-card-img-placeholder">🖼️</div>'}
-      <div class="gal-card-body">
-        <div class="gal-card-label">${g.label || 'Photo ' + (i+1)}</div>
-        <div class="gal-card-sub">${g.sub || ''}</div>
-        <div class="gal-card-badge-row">
-          ${g.badge ? `<div class="gal-card-badge">${g.badge}</div>` : ''}
-          <div class="gal-card-badge" style="background:rgba(124,58,255,0.1);border-color:rgba(124,58,255,0.3);color:#a78bff;">${g.size==='big'?'BIG':'NORMAL'}</div>
-        </div>
-      </div>
-      <div class="gal-card-actions">
-        <button class="del-btn" onclick="deleteGalleryPhoto('${g.id}')">✕ DELETE</button>
-        <button class="add-btn" style="font-size:0.48rem;padding:5px 10px;" onclick="moveGalleryPhoto(${i}, -1)">↑ UP</button>
-        <button class="add-btn" style="font-size:0.48rem;padding:5px 10px;" onclick="moveGalleryPhoto(${i}, 1)">↓ DOWN</button>
-      </div>
-    </div>
-  `).join('');
-}
-
-window.handleGalleryUpload = async function(event) {
-  const file = event.target.files[0];
-  if(!file) return;
-  const label = document.getElementById('gal-label').value.trim() || 'Store Photo';
-  const sub   = document.getElementById('gal-sub').value.trim();
-  const badge = document.getElementById('gal-badge').value.trim();
-  const size  = document.getElementById('gal-size').value;
-
-  const btn   = document.getElementById('gal-upload-btn');
-  const prog  = document.getElementById('gal-upload-prog');
-  const prev  = document.getElementById('gal-new-preview');
-  if(btn) btn.classList.add('uploading');
-
-  try {
-    prog.textContent = '> UPLOADING TO CLOUDINARY...';
-    const fd = new FormData();
-    fd.append('file', file);
-    fd.append('upload_preset', 'racecomp');
-    fd.append('folder', 'race_computer_gallery');
-    const res = await fetch(`https://api.cloudinary.com/v1_1/dbxfqh6zz/image/upload`, { method:'POST', body:fd });
-    const data = await res.json();
-    if(data.error) throw new Error(data.error.message);
-    const url = data.secure_url;
-
-    // Preview
-    prev.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover;">`;
-    prog.textContent = '> UPLOAD COMPLETE ✓';
-
-    // Save to Firebase
-    const db = window._db, ref = window._ref;
-    const { push, set } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js");
-    if(!db){ showToast('Firebase not connected — image uploaded but not saved',true); return; }
-    const newRef = push(ref(db, 'gallery'));
-    await set(newRef, { url, label, sub, badge, size, order: localGallery.length, createdAt: Date.now() });
-    showToast('✓ Photo uploaded & saved!', false, true);
-
-    // Reset fields
-    document.getElementById('gal-label').value = '';
-    document.getElementById('gal-sub').value = '';
-    document.getElementById('gal-badge').value = '';
-    document.getElementById('gal-size').value = 'normal';
-    event.target.value = '';
-
-    // Reload gallery
-    loadGalleryEditor();
-  } catch(e) {
-    prog.textContent = '> FAILED: ' + e.message;
-    showToast('Upload failed: ' + e.message, true);
-  }
-  if(btn) btn.classList.remove('uploading');
-};
-
-window.deleteGalleryPhoto = async function(id) {
-  if(!confirm('Is photo ko delete karo?')) return;
-  const db = window._db, ref = window._ref, remove = window._remove;
-  if(!db){ showToast('Firebase not connected',true); return; }
-  try {
-    await remove(ref(db, 'gallery/' + id));
-    showToast('✓ Photo deleted', false, true);
-    loadGalleryEditor();
-  } catch(e) { showToast('Delete failed: ' + e.message, true); }
-};
-
-window.moveGalleryPhoto = async function(index, dir) {
-  const newIndex = index + dir;
-  if(newIndex < 0 || newIndex >= localGallery.length) return;
-  // Swap
-  [localGallery[index], localGallery[newIndex]] = [localGallery[newIndex], localGallery[index]];
-  // Update order in firebase
-  const db = window._db, ref = window._ref;
-  const { update } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js");
-  if(!db){ renderGalleryEditor(localGallery); return; }
-  try {
-    const updates = {};
-    localGallery.forEach((g,i) => { if(g.id) updates[`gallery/${g.id}/order`] = i; });
-    await update(ref(db, '/'), updates);
-    renderGalleryEditor(localGallery);
-    showToast('✓ Order updated', false, true);
-  } catch(e) { showToast('Reorder failed: '+e.message, true); }
-};
-
+// Sync bottom nav badge with enquiry badge
 function syncMobileEnqBadge() {
   const mainBadge = document.getElementById('new-badge');
   const mbnBadge = document.getElementById('mbn-enq-badge');
